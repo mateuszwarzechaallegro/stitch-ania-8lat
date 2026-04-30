@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Misja Ania — GPS Stitcha</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .hidden { display: none !important; }
+
+    /* ── Distance display ── */
+    .nav-card-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-around;
+      gap: 12px;
+      flex-wrap: wrap;
+      padding: 6px 0;
+    }
+    .dist-wrap { text-align: center; }
+    .dist-number {
+      font-size: 4.5rem;
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+      line-height: 1;
+      transition: color 0.4s;
+    }
+    .dist-unit {
+      font-size: 0.9rem;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+    .dist-far    { color: var(--muted); }
+    .dist-medium { color: #ff9f43; }
+    .dist-close  { color: var(--success); animation: glow-pulse 0.9s infinite; }
+    .dist-here   { color: var(--teal);   animation: glow-pulse 0.5s infinite; }
+
+    /* ── Compass ── */
+    .compass-wrap { text-align: center; }
+    .compass-arrow {
+      font-size: 3.2rem;
+      line-height: 1;
+      display: block;
+    }
+    .compass-label { font-size: 0.72rem; color: var(--muted); margin-top: 4px; }
+
+    /* ── GPS status line ── */
+    .gps-status {
+      font-size: 0.8rem;
+      color: var(--muted);
+      text-align: center;
+      min-height: 1.4em;
+      margin-top: 6px;
+    }
+
+    /* ── Countdown ── */
+    .countdown-display {
+      font-size: 4rem;
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.05em;
+      color: var(--teal);
+      text-align: center;
+      line-height: 1.1;
+      transition: color 0.5s;
+    }
+    .countdown-display.urgent {
+      color: var(--pink);
+      animation: blink-urgent 0.6s step-end infinite;
+    }
+    @keyframes blink-urgent {
+      0%, 100% { opacity: 1; }
+      50%       { opacity: 0.25; }
+    }
+    .countdown-label {
+      font-size: 0.82rem;
+      color: var(--muted);
+      text-align: center;
+      margin-top: 4px;
+    }
+
+    /* ── Code input ── */
+    .code-row {
+      display: flex;
+      gap: 8px;
+    }
+    .code-row input {
+      flex: 1;
+      padding: 13px 14px;
+      background: var(--surface2);
+      border: 2px solid var(--border);
+      border-radius: 10px;
+      color: var(--fg);
+      font-size: 1.1rem;
+      font-family: monospace;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+    .code-row input:focus { outline: none; border-color: var(--purple); }
+    .code-error {
+      font-size: 0.82rem;
+      color: var(--pink);
+      text-align: center;
+      min-height: 1.3em;
+      margin-top: 4px;
+    }
+
+    /* ── Completion ── */
+    .success-big {
+      text-align: center;
+      padding: 18px 0 10px;
+      animation: pop-in 0.5s ease both;
+    }
+    .success-big .icon { font-size: 5rem; line-height: 1.1; }
+    .success-big h2 { color: var(--success); font-size: 1.5rem; margin: 10px 0 6px; }
+    .success-big p  { color: var(--muted); font-size: 0.95rem; line-height: 1.7; }
+  </style>
+</head>
+<body>
+  <div class="page-header">
+    <div class="chars">🛸📍</div>
+    <h1>GPS Stitcha</h1>
+    <span class="step-badge">Etap 3 z 4</span>
+  </div>
+
+  <div class="page">
+
+    <div class="story-card" id="story-card">
+      <div class="from">🛸 Pokładowy GPS aktywowany!</div>
+      Brawo! Znalazłaś drzewo i zeskanowałaś nadajnik!<br><br>
+      GPS Stitcha namierzył lokalizację <strong>ukrytego silnika reaktora</strong>.
+      Silnik jest zakopany niedaleko — gdy będziesz blisko,
+      Twoje <strong>urządzenie detekcyjne</strong> zacznie pikać!<br><br>
+      Uwaga — silnik <strong>przegrzewa się</strong>! Masz ograniczony czas!
+      Gdy znajdziesz skrzynkę, odczytaj <strong>tajny kod aktywacyjny</strong>
+      i wpisz go tutaj, żeby uratować reaktor! 🔥
+    </div>
+
+    <button class="btn btn-primary" id="btn-start" onclick="startGame()"
+      style="font-size:1.2rem;padding:16px 0;">
+      🛸 AKTYWUJ GPS!
+    </button>
+
+    <!-- ── GAME: GPS + countdown + code ── -->
+    <div id="game-section" class="hidden">
+
+      <!-- GPS distance card -->
+      <div class="card">
+        <h2 style="text-align:center">📡 Sygnał GPS</h2>
+        <div class="nav-card-inner">
+          <div class="dist-wrap">
+            <div class="dist-number dist-far" id="dist-num">---</div>
+            <div class="dist-unit" id="dist-unit">metrów</div>
+          </div>
+          <div class="compass-wrap">
+            <span class="compass-arrow" id="compass-arrow">❔</span>
+            <div class="compass-label" id="compass-label">szukam GPS…</div>
+          </div>
+        </div>
+        <div class="gps-status" id="gps-status">Oczekiwanie na sygnał GPS…</div>
+      </div>
+
+      <!-- Countdown card -->
+      <div class="card">
+        <h2 style="text-align:center">⏱️ Czas do przegrzania silnika</h2>
+        <div class="countdown-display" id="countdown">--:--</div>
+        <div class="countdown-label" id="countdown-label">Znajdź silnik zanim skończy się czas!</div>
+      </div>
+
+      <!-- Code input card -->
+      <div class="card">
+        <h2>🔐 Kod aktywacyjny</h2>
+        <p style="font-size:0.9rem;color:var(--muted);margin-bottom:12px">
+          Odczytaj kod ze znalezionej skrzynki i wpisz go poniżej:
+        </p>
+        <div class="code-row">
+          <input type="text" id="code-input" placeholder="wpisz kod…"
+            autocomplete="off" autocorrect="off" spellcheck="false" />
+          <button class="btn btn-primary" onclick="checkCode()"
+            style="padding:12px 18px;width:auto;font-size:1.1rem">✓</button>
+        </div>
+        <div class="code-error" id="code-error"></div>
+      </div>
+
+    </div>
+
+    <!-- ── COMPLETION ── -->
+    <div id="completion-section" class="hidden">
+      <div class="card">
+        <div class="success-big">
+          <div class="icon">⚡🛸</div>
+          <h2>Silnik aktywowany!</h2>
+          <p>
+            Reaktor odżywa! Stitch i Hello Kitty<br>
+            są z Ciebie niesamowicie dumni.<br><br>
+            Teraz <strong>ostatnia zagadka</strong> — i statek poleci w kosmos!
+          </p>
+        </div>
+      </div>
+      <a href="final.html" class="btn btn-primary"
+        style="font-size:1.3rem;padding:18px 0;">
+        🚀 Do finału! Ostatnia zagadka →
+      </a>
+    </div>
+
+  </div>
+
+  <script>
+    // ═══════════════════════════════════════════════════════════
+    //  KONFIGURACJA — ustaw przed imprezą!
+    // ═══════════════════════════════════════════════════════════
+    const TARGET_LAT        = 52.123456;  // ← ZMIEŃ: szerokość geograficzna skrzynki
+    const TARGET_LNG        = 21.123456;  // ← ZMIEŃ: długość geograficzna skrzynki
+    const COUNTDOWN_MINUTES = 15;         // ← czas odliczania (minuty)
+    const SECRET_CODE       = 'SILNIK';   // ← hasło w skrzynce (wielkość liter nieważna)
+    // ═══════════════════════════════════════════════════════════
+
+    const STORAGE_KEY = 'nav_timer_start';
+    const IS_PLACEHOLDER = (TARGET_LAT === 52.123456 && TARGET_LNG === 21.123456);
+
+    let watchId     = null;
+    let timerHandle = null;
+    let prevDist    = null;
+
+    // DOM
+    const $story      = document.getElementById('story-card');
+    const $btnStart   = document.getElementById('btn-start');
+    const $game       = document.getElementById('game-section');
+    const $completion = document.getElementById('completion-section');
+    const $distNum    = document.getElementById('dist-num');
+    const $distUnit   = document.getElementById('dist-unit');
+    const $compass    = document.getElementById('compass-arrow');
+    const $compLabel  = document.getElementById('compass-label');
+    const $gpsStatus  = document.getElementById('gps-status');
+    const $countdown  = document.getElementById('countdown');
+    const $cdLabel    = document.getElementById('countdown-label');
+    const $codeInput  = document.getElementById('code-input');
+    const $codeError  = document.getElementById('code-error');
+
+    // ── START ────────────────────────────────────────────────
+    function startGame() {
+      $story.classList.add('hidden');
+      $btnStart.classList.add('hidden');
+      $game.classList.remove('hidden');
+
+      if (!localStorage.getItem(STORAGE_KEY)) {
+        localStorage.setItem(STORAGE_KEY, Date.now().toString());
+      }
+      tickCountdown();
+      timerHandle = setInterval(tickCountdown, 1000);
+      startGPS();
+    }
+
+    // ── COUNTDOWN ───────────────────────────────────────────
+    function tickCountdown() {
+      const start   = parseInt(localStorage.getItem(STORAGE_KEY));
+      const elapsed = Date.now() - start;
+      const total   = COUNTDOWN_MINUTES * 60 * 1000;
+      const remain  = Math.max(0, total - elapsed);
+      const mins    = Math.floor(remain / 60000);
+      const secs    = Math.floor((remain % 60000) / 1000);
+      $countdown.textContent = pad(mins) + ':' + pad(secs);
+
+      if (remain <= 0) {
+        clearInterval(timerHandle);
+        $countdown.textContent = '00:00';
+        $countdown.classList.add('urgent');
+        $cdLabel.textContent = '💥 Czas minął! Ale nie poddawaj się — znajdź skrzynkę!';
+      } else if (remain <= 60000) {
+        $countdown.classList.add('urgent');
+        $cdLabel.textContent = '🔥 SILNIK PRAWIE EKSPLODUJE! BIEGNIJ!';
+      }
+    }
+
+    function pad(n) { return n.toString().padStart(2, '0'); }
+
+    // ── GPS ─────────────────────────────────────────────────
+    function startGPS() {
+      if (!navigator.geolocation) {
+        $gpsStatus.textContent = 'GPS niedostępny — wpisz kod gdy znajdziesz skrzynkę';
+        $distNum.textContent   = '?';
+        return;
+      }
+      watchId = navigator.geolocation.watchPosition(onPosition, onGpsError, {
+        enableHighAccuracy: true,
+        maximumAge: 2000,
+        timeout: 12000,
+      });
+    }
+
+    function onPosition(pos) {
+      const lat  = pos.coords.latitude;
+      const lng  = pos.coords.longitude;
+      const dist = Math.round(getDistance(lat, lng, TARGET_LAT, TARGET_LNG));
+
+      if (IS_PLACEHOLDER) {
+        $gpsStatus.textContent = '⚠️ Ustaw TARGET_LAT / TARGET_LNG w nav.html przed imprezą!';
+        $distNum.textContent   = '???';
+        $distUnit.textContent  = '';
+        return;
+      }
+
+      // Distance number + unit
+      if (dist <= 5) {
+        $distNum.textContent  = '🎯';
+        $distUnit.textContent = 'JESTEŚ NA MIEJSCU!';
+        $distNum.className    = 'dist-number dist-here';
+        if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 100]);
+      } else if (dist >= 1000) {
+        $distNum.textContent  = (dist / 1000).toFixed(1);
+        $distUnit.textContent = 'km';
+        $distNum.className    = 'dist-number dist-far';
+      } else {
+        $distNum.textContent  = dist;
+        $distUnit.textContent = 'metrów';
+        $distNum.className    = 'dist-number ' +
+          (dist > 100 ? 'dist-far' : dist > 20 ? 'dist-medium' : 'dist-close');
+      }
+
+      // Compass
+      const bearing = getBearing(lat, lng, TARGET_LAT, TARGET_LNG);
+      const { arrow, label } = bearingToArrow(bearing);
+      $compass.textContent = arrow;
+      $compLabel.textContent = label + ' (wg płn.)';
+
+      // Warmer / colder
+      if (prevDist !== null) {
+        const d = prevDist - dist;
+        $gpsStatus.textContent = d > 3 ? '🔥 Cieplej! (' + dist + ' m)'
+          : d < -3 ? '🥶 Zimniej! (' + dist + ' m)'
+          : '→ ' + dist + ' m do celu';
+      } else {
+        $gpsStatus.textContent = '📡 GPS znaleziony! ' + dist + ' m do celu';
+      }
+      prevDist = dist;
+    }
+
+    function onGpsError(err) {
+      $gpsStatus.textContent = err.code === 1
+        ? 'GPS: brak uprawnień — wpisz kod gdy znajdziesz skrzynkę'
+        : 'GPS: błąd sygnału (' + err.message + ')';
+    }
+
+    // ── MATH ────────────────────────────────────────────────
+    function getDistance(lat1, lon1, lat2, lon2) {
+      const R    = 6371000;
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const a    = Math.sin(dLat / 2) ** 2 +
+                   Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                   Math.sin(dLon / 2) ** 2;
+      return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    }
+
+    function getBearing(lat1, lon1, lat2, lon2) {
+      const dLon = (lon2 - lon1) * Math.PI / 180;
+      const y = Math.sin(dLon) * Math.cos(lat2 * Math.PI / 180);
+      const x = Math.cos(lat1 * Math.PI / 180) * Math.sin(lat2 * Math.PI / 180) -
+                Math.sin(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.cos(dLon);
+      return (Math.atan2(y, x) * 180 / Math.PI + 360) % 360;
+    }
+
+    function bearingToArrow(b) {
+      const dirs = [
+        { arrow: '↑', label: 'Północ'      },
+        { arrow: '↗', label: 'Płn-wschód'  },
+        { arrow: '→', label: 'Wschód'       },
+        { arrow: '↘', label: 'Płd-wschód'  },
+        { arrow: '↓', label: 'Południe'     },
+        { arrow: '↙', label: 'Płd-zachód'  },
+        { arrow: '←', label: 'Zachód'       },
+        { arrow: '↖', label: 'Płn-zachód'  },
+      ];
+      return dirs[Math.round(b / 45) % 8];
+    }
+
+    // ── CODE CHECK ──────────────────────────────────────────
+    function checkCode() {
+      const val = $codeInput.value.trim().toUpperCase();
+      if (val === SECRET_CODE.toUpperCase()) {
+        clearInterval(timerHandle);
+        if (watchId !== null) navigator.geolocation.clearWatch(watchId);
+        localStorage.removeItem(STORAGE_KEY);
+        $game.classList.add('hidden');
+        $completion.classList.remove('hidden');
+        launchConfetti();
+        if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 300]);
+      } else {
+        $codeError.textContent = '❌ Nieprawidłowy kod — spróbuj jeszcze raz!';
+        $codeInput.value = '';
+        if (navigator.vibrate) navigator.vibrate(200);
+        setTimeout(() => { $codeError.textContent = ''; }, 2500);
+      }
+    }
+
+    $codeInput.addEventListener('keydown', e => { if (e.key === 'Enter') checkCode(); });
+
+    // ── CONFETTI ────────────────────────────────────────────
+    function launchConfetti() {
+      const container = document.createElement('div');
+      container.className = 'confetti-container';
+      document.body.appendChild(container);
+      const colors = ['#c45cd9','#ff6ba8','#2d7dd2','#00b4d8','#ffb347','#52b788'];
+      for (let i = 0; i < 70; i++) {
+        const p = document.createElement('div');
+        p.className = 'confetti-piece';
+        p.style.left              = Math.random() * 100 + 'vw';
+        p.style.background        = colors[Math.floor(Math.random() * colors.length)];
+        p.style.width             = (8 + Math.random() * 8) + 'px';
+        p.style.height            = (8 + Math.random() * 8) + 'px';
+        p.style.animationDuration = (2 + Math.random() * 2) + 's';
+        p.style.animationDelay    = (Math.random() * 1) + 's';
+        container.appendChild(p);
+      }
+      setTimeout(() => container.remove(), 5000);
+    }
+  </script>
+</body>
+</html>
