@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Misja Ania — Wiadomość Hello Kitty</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .hidden { display: none !important; }
+
+    /* ── Simon Says ── */
+    .emotion-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+    }
+    .emotion-btn {
+      aspect-ratio: 1;
+      background: var(--surface2);
+      border: 3px solid var(--border);
+      border-radius: var(--radius);
+      font-size: 3.2rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: transform 0.1s, border-color 0.15s, background 0.15s;
+      touch-action: manipulation;
+      -webkit-tap-highlight-color: transparent;
+      line-height: 1;
+    }
+    .emotion-btn:active { transform: scale(0.93); }
+    .emotion-btn.lit {
+      border-color: var(--pink);
+      background: rgba(255, 107, 168, 0.18);
+      transform: scale(1.06);
+      box-shadow: 0 0 24px rgba(255, 107, 168, 0.5);
+    }
+    .emotion-btn.correct-tap {
+      border-color: var(--success);
+      background: rgba(82, 183, 136, 0.18);
+    }
+    .simon-status {
+      text-align: center;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--muted);
+      min-height: 1.5em;
+      padding: 4px 0;
+    }
+
+    /* ── Victory ── */
+    .codes-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .code-item {
+      background: var(--surface2);
+      border: 2px solid var(--success);
+      border-radius: var(--radius-sm);
+      padding: 14px 10px;
+      text-align: center;
+    }
+    .code-item .ci-symbol { font-size: 2rem; line-height: 1; }
+    .code-item .ci-label  { font-size: 0.65rem; color: var(--muted); margin-top: 4px; }
+    .code-item .ci-val    { font-size: 0.95rem; font-weight: 800; color: var(--success); margin-top: 2px; }
+  </style>
+</head>
+<body>
+  <div class="page-header">
+    <div class="chars">😊🎀</div>
+    <h1>Wiadomość Hello Kitty</h1>
+    <span class="step-badge">Etap 5 z 5</span>
+  </div>
+
+  <div class="page">
+
+    <div class="story-card" id="story-card">
+      <div class="from">🎀 Ostatnia wiadomość od Hello Kitty</div>
+      Dotarłaś do bazy — jesteś niesamowita! 🌟<br><br>
+      Hello Kitty wysyła swoją <strong>ostatnią zakodowaną wiadomość</strong>.
+      Tym razem zakodowała ją w emocjach — specjalnej sekwencji buziek!<br><br>
+      <strong>Zapamiętaj kolejność i powtórz ją.</strong>
+      Ostatnia emocja to Twój <strong>4. i ostatni kod</strong> do pudełka reaktora! 🔐
+    </div>
+
+    <button class="btn btn-primary" id="btn-start" onclick="startGame()"
+      style="font-size:1.2rem;padding:16px 0;">
+      😊 OTWÓRZ WIADOMOŚĆ!
+    </button>
+
+    <!-- ── Simon Says game ── -->
+    <div id="game-section" class="hidden">
+      <div class="card">
+        <h2>😊 Simon mówi…</h2>
+        <p style="margin-bottom:14px;font-size:0.9rem;color:var(--muted)">
+          Zapamiętaj sekwencję buziek i powtórz ją w tej samej kolejności!
+        </p>
+
+        <div class="simon-status" id="simon-status">
+          Naciśnij START aby zobaczyć sekwencję
+        </div>
+
+        <div class="emotion-grid" id="emotion-grid">
+          <button class="emotion-btn" id="e0" onclick="playerTap(0)">😢</button>
+          <button class="emotion-btn" id="e1" onclick="playerTap(1)">😠</button>
+          <button class="emotion-btn" id="e2" onclick="playerTap(2)">😲</button>
+          <button class="emotion-btn" id="e3" onclick="playerTap(3)">😊</button>
+        </div>
+
+        <button class="btn btn-secondary" id="btn-simon-start"
+          style="margin-top:14px" onclick="startSimon()">
+          ▶️ START — pokaż sekwencję
+        </button>
+      </div>
+    </div>
+
+    <!-- ── Completion: success + victory ── -->
+    <div id="completion-section" class="hidden">
+
+      <div class="card">
+        <div class="success-box visible">
+          <div class="big-symbol">😊</div>
+          <p>
+            Ostatnia emocja to<br>
+            <strong>UŚMIECHNIĘTA BUZIA 😊</strong><br>
+            4. kod aktywowany!
+          </p>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2 style="color:var(--warning);text-align:center;font-size:1.4rem;margin-bottom:8px">
+          🎉 BRAWO ANIA! 🎉
+        </h2>
+        <p style="text-align:center;margin-bottom:6px;font-size:1rem">
+          Zebrałaś wszystkie 4 kody!<br>
+          Ustaw je na pudełku i otwórz niespodziankę!
+        </p>
+
+        <div class="codes-grid">
+          <div class="code-item">
+            <div class="ci-symbol">🔢</div>
+            <div class="ci-label">Strona 1 (cyfry)</div>
+            <div class="ci-val">3</div>
+          </div>
+          <div class="code-item">
+            <div class="ci-symbol">♉</div>
+            <div class="ci-label">Strona 2 (zodiak)</div>
+            <div class="ci-val">BYK ♉</div>
+          </div>
+          <div class="code-item">
+            <div class="ci-symbol">📅</div>
+            <div class="ci-label">Strona 3 (dni)</div>
+            <div class="ci-val">TU (wtorek)</div>
+          </div>
+          <div class="code-item">
+            <div class="ci-symbol">😊</div>
+            <div class="ci-label">Strona 4 (emotki)</div>
+            <div class="ci-val">Uśmiechnięta buzia</div>
+          </div>
+        </div>
+
+        <p style="text-align:center;margin-top:18px;font-size:1.1rem">
+          👾🎀 Stitch i Hello Kitty dziękują Ci<br>
+          za uratowanie statku! 🎀👾
+        </p>
+      </div>
+
+    </div>
+
+  </div>
+
+  <script>
+    function startGame() {
+      document.getElementById('story-card').classList.add('hidden');
+      document.getElementById('btn-start').classList.add('hidden');
+      document.getElementById('game-section').classList.remove('hidden');
+    }
+
+    // ── Simon Says ───────────────────────────────────────────
+    const HAPPY_IDX = 3;
+    let sequence    = [];
+    let playerInput = [];
+    let accepting   = false;
+
+    function makeSequence() {
+      const seq = [];
+      for (let i = 0; i < 3; i++) seq.push(Math.floor(Math.random() * 3));
+      seq.push(HAPPY_IDX); // last always 😊
+      return seq;
+    }
+
+    function flashButton(idx, ms) {
+      return new Promise(resolve => {
+        const btn = document.getElementById('e' + idx);
+        btn.classList.add('lit');
+        setTimeout(() => { btn.classList.remove('lit'); resolve(); }, ms);
+      });
+    }
+
+    async function showSequence(seq) {
+      accepting = false;
+      document.getElementById('simon-status').textContent = '👀 Zapamiętaj sekwencję…';
+      document.getElementById('btn-simon-start').style.display = 'none';
+      document.querySelectorAll('.emotion-btn').forEach(b => b.style.pointerEvents = 'none');
+      await new Promise(r => setTimeout(r, 800));
+      for (const idx of seq) {
+        await flashButton(idx, 650);
+        await new Promise(r => setTimeout(r, 350));
+      }
+      document.querySelectorAll('.emotion-btn').forEach(b => b.style.pointerEvents = '');
+      accepting   = true;
+      playerInput = [];
+      document.getElementById('simon-status').textContent =
+        '🎯 Teraz Twoja kolej! Tapnij w tej samej kolejności';
+    }
+
+    function startSimon() {
+      sequence = makeSequence();
+      showSequence(sequence);
+    }
+
+    function playerTap(idx) {
+      if (!accepting) return;
+      const btn = document.getElementById('e' + idx);
+      btn.classList.add('correct-tap');
+      setTimeout(() => btn.classList.remove('correct-tap'), 300);
+      if (navigator.vibrate) navigator.vibrate(40);
+
+      playerInput.push(idx);
+      const pos = playerInput.length - 1;
+
+      if (playerInput[pos] !== sequence[pos]) {
+        accepting = false;
+        document.getElementById('simon-status').textContent =
+          '❌ Ups! Powtórzmy sekwencję od nowa…';
+        if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
+        document.getElementById('emotion-grid').classList.add('shake');
+        setTimeout(() => {
+          document.getElementById('emotion-grid').classList.remove('shake');
+          showSequence(sequence);
+        }, 1800);
+        return;
+      }
+
+      if (playerInput.length === sequence.length) {
+        accepting = false;
+        onSimonSolved();
+      }
+    }
+
+    function onSimonSolved() {
+      document.getElementById('simon-status').textContent = '🎉 Brawo! Sekwencja poprawna!';
+      if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 400]);
+      launchConfetti();
+      setTimeout(() => {
+        document.getElementById('game-section').classList.add('hidden');
+        document.getElementById('completion-section').classList.remove('hidden');
+        document.getElementById('completion-section')
+          .scrollIntoView({behavior: 'smooth'});
+        launchConfetti();
+      }, 1400);
+    }
+
+    function launchConfetti() {
+      const container = document.createElement('div');
+      container.className = 'confetti-container';
+      document.body.appendChild(container);
+      const colors = ['#c45cd9','#ff6ba8','#2d7dd2','#00b4d8','#ffb347','#52b788'];
+      for (let i = 0; i < 80; i++) {
+        const p = document.createElement('div');
+        p.className = 'confetti-piece';
+        p.style.left              = Math.random() * 100 + 'vw';
+        p.style.background        = colors[Math.floor(Math.random() * colors.length)];
+        p.style.width             = (6 + Math.random() * 10) + 'px';
+        p.style.height            = (6 + Math.random() * 10) + 'px';
+        p.style.animationDuration = (2 + Math.random() * 2) + 's';
+        p.style.animationDelay    = (Math.random() * 1.5) + 's';
+        container.appendChild(p);
+      }
+      setTimeout(() => container.remove(), 6000);
+    }
+  </script>
+</body>
+</html>

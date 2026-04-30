@@ -3,21 +3,21 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>Misja Ania — Centrum Dowodzenia</title>
+  <title>Misja Ania — Kod Czasowy</title>
   <link rel="stylesheet" href="style.css" />
   <style>
-    /* ── Days drag & drop ── */
+    .hidden { display: none !important; }
     #days-game { user-select: none; -webkit-user-select: none; }
 
     .slots-row {
       display: flex;
       gap: 4px;
       flex-wrap: nowrap;
-      overflow: hidden;   /* no scrollbar ever */
+      overflow: hidden;
     }
     .day-slot {
-      flex: 1 1 0;        /* equal share of available width */
-      min-width: 0;       /* allow shrinking below content */
+      flex: 1 1 0;
+      min-width: 0;
       height: 52px;
       border: 2px dashed var(--border);
       border-radius: var(--radius-sm);
@@ -33,7 +33,6 @@
     .day-slot span { font-size: 0.55rem; color: var(--muted); }
     .day-slot.occupied { border-style: solid; border-color: var(--border); }
 
-    /* Tile shrinks to fill the slot when placed */
     .day-slot .day-tile {
       width: 100%;
       box-sizing: border-box;
@@ -53,7 +52,6 @@
       border: 2px dashed var(--border);
       border-radius: var(--radius-sm);
     }
-
     .day-tile {
       padding: 10px 12px;
       background: linear-gradient(135deg, var(--blue), var(--purple));
@@ -77,188 +75,81 @@
       animation: glow-pulse 1s infinite;
       transform: scale(1.1);
     }
-
-    /* ── Simon Says ── */
-    #simon-game { display: none; }
-
-    .emotion-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
-    }
-    .emotion-btn {
-      aspect-ratio: 1;
-      background: var(--surface2);
-      border: 3px solid var(--border);
-      border-radius: var(--radius);
-      font-size: 3.2rem;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: transform 0.1s, border-color 0.15s, background 0.15s;
-      touch-action: manipulation;
-      -webkit-tap-highlight-color: transparent;
-      line-height: 1;
-    }
-    .emotion-btn:active { transform: scale(0.93); }
-    .emotion-btn.lit {
-      border-color: var(--pink);
-      background: rgba(255, 107, 168, 0.18);
-      transform: scale(1.06);
-      box-shadow: 0 0 24px rgba(255, 107, 168, 0.5);
-    }
-    .emotion-btn.correct-tap {
-      border-color: var(--success);
-      background: rgba(82, 183, 136, 0.18);
-    }
-    .simon-status {
-      text-align: center;
-      font-size: 0.9rem;
-      font-weight: 600;
-      color: var(--muted);
-      min-height: 1.5em;
-      padding: 4px 0;
-    }
-
-    /* ── Victory ── */
-    #victory { display: none; }
-    .codes-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-top: 14px;
-    }
-    .code-item {
-      background: var(--surface2);
-      border: 2px solid var(--success);
-      border-radius: var(--radius-sm);
-      padding: 14px 10px;
-      text-align: center;
-    }
-    .code-item .ci-symbol { font-size: 2rem; line-height: 1; }
-    .code-item .ci-label  { font-size: 0.65rem; color: var(--muted); margin-top: 4px; }
-    .code-item .ci-val    { font-size: 0.95rem; font-weight: 800; color: var(--success); margin-top: 2px; }
   </style>
 </head>
 <body>
   <div class="page-header">
-    <div class="chars">🎀👾</div>
-    <h1>Centrum Dowodzenia</h1>
-    <span class="step-badge">Etap 4 z 4</span>
+    <div class="chars">🎀📅</div>
+    <h1>Kod Czasowy</h1>
+    <span class="step-badge">Etap 4 z 5</span>
   </div>
 
   <div class="page">
 
-    <div class="story-card">
-      <div class="from">🏠 Centrum dowodzenia Stitcha</div>
-      Dotarłyście do centrum dowodzenia! Zostały <strong>ostatnie dwa kody</strong>
-      do aktywacji reaktora. Hello Kitty ma dla Was ostatnie zadania — dajcie radę! 💪
+    <div class="story-card" id="story-card">
+      <div class="from">🖥️ Komputer pokładowy Stitcha</div>
+      Reaktor potrzebuje <strong>kodu czasowego</strong> zanim uruchomi silniki!
+      Komputer wymaga prawidłowej sekwencji dni tygodnia — od poniedziałku
+      do niedzieli.<br><br>
+      <strong>Ułóżcie dni we właściwej kolejności</strong> żeby odblokować system!
     </div>
 
-    <!-- ═══ PART 1: Days of Week ═══ -->
-    <div class="card" id="days-game">
-      <h2>📅 Kod czasowy</h2>
-      <p style="margin-bottom: 14px;">
-        Komputer potrzebuje kodu czasowego.
-        <strong>Ułóżcie dni tygodnia w kolejności</strong> od poniedziałku do niedzieli!
-      </p>
+    <button class="btn btn-primary" id="btn-start" onclick="startGame()"
+      style="font-size:1.2rem;padding:16px 0;">
+      📅 ZACZNIJ UKŁADAĆ!
+    </button>
 
-      <div class="slots-row" id="slots-row"></div>
+    <div id="game-section" class="hidden">
+      <div class="card" id="days-game">
+        <h2>📅 Ułóż dni tygodnia</h2>
+        <p style="margin-bottom:14px;font-size:0.9rem;color:var(--muted)">
+          Przeciągaj kafelki do slotów — od <strong>poniedziałku</strong> do <strong>niedzieli</strong>:
+        </p>
 
-      <div style="margin: 12px 0; font-size: 0.82rem; color: var(--muted);">Dostępne kafelki — przeciągaj do slotów:</div>
-      <div class="days-pool" id="days-pool"></div>
+        <div class="slots-row" id="slots-row"></div>
 
-      <div class="error-msg" id="days-error"></div>
+        <div style="margin:12px 0;font-size:0.82rem;color:var(--muted)">Dostępne kafelki:</div>
+        <div class="days-pool" id="days-pool"></div>
 
-      <div class="success-box" id="days-success" style="margin-top: 14px;">
-        <div class="big-symbol">📅</div>
-        <p>Wtorek — to dzień urodzin Ani!<br>Ustaw <strong>TU</strong> na pudełku!</p>
+        <div class="error-msg" id="days-error"></div>
+
+        <button class="btn btn-primary" id="btn-days-check" style="margin-top:14px"
+          onclick="checkDays()">
+          ✅ Sprawdź kolejność
+        </button>
       </div>
 
-      <button class="btn btn-primary" id="btn-days-check" style="margin-top: 14px;" onclick="checkDays()">
-        ✅ Sprawdź kolejność
-      </button>
-    </div>
-
-    <!-- ═══ PART 2: Simon Says ═══ -->
-    <div class="card" id="simon-game">
-      <h2>😊 Wiadomość Hello Kitty</h2>
-      <p style="margin-bottom: 14px;">
-        Hello Kitty wysyła ostatnią wiadomość zakodowaną w emocjach.
-        <strong>Zapamiętaj sekwencję i powtórz ją!</strong>
-        Ostatnia emocja to Wasz ostatni kod!
-      </p>
-
-      <div class="simon-status" id="simon-status">Naciśnij START aby zobaczyć sekwencję</div>
-
-      <div class="emotion-grid" id="emotion-grid">
-        <button class="emotion-btn" id="e0" onclick="playerTap(0)">😢</button>
-        <button class="emotion-btn" id="e1" onclick="playerTap(1)">😠</button>
-        <button class="emotion-btn" id="e2" onclick="playerTap(2)">😲</button>
-        <button class="emotion-btn" id="e3" onclick="playerTap(3)">😊</button>
+      <!-- shown after correct solve -->
+      <div id="completion-section" class="hidden">
+        <div class="card">
+          <div class="success-box visible">
+            <div class="big-symbol">📅</div>
+            <p>
+              Wtorek — to dzień urodzin Ani!<br>
+              Ustaw <strong>TU</strong> na pudełku!
+            </p>
+          </div>
+        </div>
+        <a href="baza.html" class="btn btn-primary"
+          style="font-size:1.3rem;padding:18px 0;">
+          🏠 Idź do bazy! Następny etap →
+        </a>
       </div>
-
-      <button class="btn btn-secondary" id="btn-simon-start" style="margin-top: 14px;" onclick="startSimon()">
-        ▶️ START — pokaż sekwencję
-      </button>
-
-      <div class="success-box" id="simon-result" style="margin-top: 14px;">
-        <div class="big-symbol">😊</div>
-        <p>Ostatnia emocja to<br>
-          <strong>UŚMIECHNIĘTA BUZIA 😊</strong><br>
-          Ostatni kod aktywowany!</p>
-      </div>
-    </div>
-
-    <!-- ═══ VICTORY ═══ -->
-    <div class="card" id="victory">
-      <h2 style="color: var(--warning); text-align: center; font-size: 1.5rem; margin-bottom: 8px;">
-        🎉 BRAWO ANIA! 🎉
-      </h2>
-      <p style="text-align: center; margin-bottom: 6px; font-size: 1rem; color: var(--text);">
-        Zebrałaś wszystkie 4 kody!<br>
-        Ustaw je na pudełku i otwórz niespodziankę!
-      </p>
-
-      <div class="codes-grid">
-        <div class="code-item">
-          <div class="ci-symbol">🔢</div>
-          <div class="ci-label">Strona 1 (cyfry)</div>
-          <div class="ci-val">3</div>
-        </div>
-        <div class="code-item">
-          <div class="ci-symbol">♉</div>
-          <div class="ci-label">Strona 2 (zodiak)</div>
-          <div class="ci-val">BYK ♉</div>
-        </div>
-        <div class="code-item">
-          <div class="ci-symbol">📅</div>
-          <div class="ci-label">Strona 3 (dni)</div>
-          <div class="ci-val">TU (wtorek)</div>
-        </div>
-        <div class="code-item">
-          <div class="ci-symbol">😊</div>
-          <div class="ci-label">Strona 4 (emotki)</div>
-          <div class="ci-val">Uśmiechnięta buzia</div>
-        </div>
-      </div>
-
-      <p style="text-align: center; margin-top: 18px; font-size: 1.2rem; color: var(--text);">
-        👾🎀 Stitch i Hello Kitty dziękują Ci<br>za uratowanie statku! 🎀👾
-      </p>
     </div>
 
   </div>
 
   <script>
-    // ══════════════════════════════════════════════════════
-    // PART 1 — DAYS OF WEEK DRAG & DROP
-    // ══════════════════════════════════════════════════════
-    const DAYS_ORDER = ['PON','WT','ŚR','CZW','PT','SOB','NIE'];
-    const slotContents = new Array(7).fill(null); // slot index → day string or null
+    function startGame() {
+      document.getElementById('story-card').classList.add('hidden');
+      document.getElementById('btn-start').classList.add('hidden');
+      document.getElementById('game-section').classList.remove('hidden');
+    }
 
-    // Build 7 slots
+    // ── Days drag & drop ─────────────────────────────────────
+    const DAYS_ORDER   = ['PON','WT','ŚR','CZW','PT','SOB','NIE'];
+    const slotContents = new Array(7).fill(null);
+
     const slotsRow = document.getElementById('slots-row');
     DAYS_ORDER.forEach((_, i) => {
       const slot = document.createElement('div');
@@ -269,7 +160,6 @@
       slotsRow.appendChild(slot);
     });
 
-    // Build shuffled tiles in pool
     const pool     = document.getElementById('days-pool');
     const shuffled = [...DAYS_ORDER].sort(() => Math.random() - 0.5);
     shuffled.forEach(day => pool.appendChild(createTile(day)));
@@ -283,7 +173,6 @@
       return tile;
     }
 
-    // ── Pointer-based drag ──
     let dragData = null;
 
     function initDragTile(tile) {
@@ -292,23 +181,15 @@
         if (tile.classList.contains('correct')) return;
         tile.setPointerCapture(e.pointerId);
         tile.classList.add('dragging');
-
-        // Float ghost
         const rect  = tile.getBoundingClientRect();
         const ghost = tile.cloneNode(true);
         ghost.id    = 'drag-ghost';
         ghost.style.cssText = [
-          'position:fixed',
-          'z-index:1000',
-          'pointer-events:none',
-          'opacity:0.92',
-          'transform:scale(1.1)',
-          `left:${rect.left}px`,
-          `top:${rect.top}px`,
-          `width:${rect.width}px`,
+          'position:fixed','z-index:1000','pointer-events:none',
+          'opacity:0.92','transform:scale(1.1)',
+          `left:${rect.left}px`,`top:${rect.top}px`,`width:${rect.width}px`,
         ].join(';');
         document.body.appendChild(ghost);
-
         dragData = { tile, ghost, day: tile.dataset.day };
       }, {passive: false});
 
@@ -317,10 +198,8 @@
         e.preventDefault();
         dragData.ghost.style.left = (e.clientX - 20) + 'px';
         dragData.ghost.style.top  = (e.clientY - 20) + 'px';
-
-        // Highlight slot under pointer
         document.querySelectorAll('.day-slot').forEach(s => s.classList.remove('drag-over'));
-        const el = document.elementFromPoint(e.clientX, e.clientY);
+        const el   = document.elementFromPoint(e.clientX, e.clientY);
         const slot = el && el.closest('.day-slot');
         if (slot && !slot.classList.contains('occupied')) slot.classList.add('drag-over');
       }, {passive: false});
@@ -331,31 +210,22 @@
         tile.classList.remove('dragging');
         dragData.ghost.remove();
         document.querySelectorAll('.day-slot').forEach(s => s.classList.remove('drag-over'));
-
-        // Find slot under pointer
         const cx = e.clientX, cy = e.clientY;
         let targetSlot = null;
         document.querySelectorAll('.day-slot').forEach(slot => {
           const r = slot.getBoundingClientRect();
-          if (cx >= r.left && cx <= r.right && cy >= r.top && cy <= r.bottom) {
-            targetSlot = slot;
-          }
+          if (cx >= r.left && cx <= r.right && cy >= r.top && cy <= r.bottom) targetSlot = slot;
         });
-
         if (targetSlot && !targetSlot.classList.contains('occupied')) {
           placeInSlot(tile, targetSlot);
-        } else if (targetSlot && targetSlot.classList.contains('occupied') && targetSlot.dataset.idx !== tile.dataset.slotIdx) {
-          // Swap: occupied slot — put existing tile back to pool and place this one
+        } else if (targetSlot && targetSlot.classList.contains('occupied') &&
+                   targetSlot.dataset.idx !== tile.dataset.slotIdx) {
           const occupant = targetSlot.querySelector('.day-tile');
-          if (occupant) {
-            returnToPool(occupant);
-          }
+          if (occupant) returnToPool(occupant);
           placeInSlot(tile, targetSlot);
         } else {
-          // Return to pool
           returnFromSlot(tile);
         }
-
         dragData = null;
       }, {passive: false});
 
@@ -370,9 +240,7 @@
     }
 
     function placeInSlot(tile, slot) {
-      // Clear previous slot if any
       returnFromSlotOnly(tile);
-
       const idx = parseInt(slot.dataset.idx, 10);
       slotContents[idx] = tile.dataset.day;
       tile.dataset.slotIdx = String(idx);
@@ -394,15 +262,8 @@
       }
     }
 
-    function returnFromSlot(tile) {
-      returnFromSlotOnly(tile);
-      pool.appendChild(tile);
-    }
-
-    function returnToPool(tile) {
-      returnFromSlotOnly(tile);
-      pool.appendChild(tile);
-    }
+    function returnFromSlot(tile) { returnFromSlotOnly(tile); pool.appendChild(tile); }
+    function returnToPool(tile)    { returnFromSlotOnly(tile); pool.appendChild(tile); }
 
     function checkDays() {
       const errEl = document.getElementById('days-error');
@@ -410,22 +271,20 @@
         errEl.textContent = '⚠️ Umieść wszystkie 7 dni w slotach!';
         return;
       }
-      const ok = slotContents.every((v, i) => v === DAYS_ORDER[i]);
-      if (ok) {
-        // Mark all correct, highlight WT
+      if (slotContents.every((v, i) => v === DAYS_ORDER[i])) {
         document.querySelectorAll('.day-tile').forEach(t => {
           t.classList.add('correct');
           if (t.dataset.day === 'WT') t.classList.add('highlight-wt');
         });
-        document.getElementById('days-success').classList.add('visible');
-        document.getElementById('btn-days-check').style.display = 'none';
+        document.getElementById('btn-days-check').classList.add('hidden');
         errEl.textContent = '';
         if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 300]);
-        // Show Simon after a moment
+        launchConfetti();
         setTimeout(() => {
-          document.getElementById('simon-game').style.display = 'block';
-          document.getElementById('simon-game').scrollIntoView({behavior: 'smooth'});
-        }, 2800);
+          document.getElementById('completion-section').classList.remove('hidden');
+          document.getElementById('completion-section')
+            .scrollIntoView({behavior: 'smooth'});
+        }, 1200);
       } else {
         errEl.textContent = '❌ Nie do końca… Sprawdź kolejność dni!';
         document.getElementById('days-game').classList.add('shake');
@@ -433,106 +292,12 @@
       }
     }
 
-    // ══════════════════════════════════════════════════════
-    // PART 2 — SIMON SAYS
-    // ══════════════════════════════════════════════════════
-    const HAPPY_IDX  = 3; // index of 😊
-    let sequence     = [];
-    let playerInput  = [];
-    let accepting    = false;
-
-    function makeSequence() {
-      const seq = [];
-      for (let i = 0; i < 3; i++) {
-        seq.push(Math.floor(Math.random() * 3)); // 0,1,2 only (never 😊 first)
-      }
-      seq.push(HAPPY_IDX); // last is always 😊
-      return seq;
-    }
-
-    function flashButton(idx, durationMs) {
-      return new Promise(resolve => {
-        const btn = document.getElementById('e' + idx);
-        btn.classList.add('lit');
-        setTimeout(() => { btn.classList.remove('lit'); resolve(); }, durationMs);
-      });
-    }
-
-    async function showSequence(seq) {
-      accepting = false;
-      document.getElementById('simon-status').textContent = '👀 Zapamiętaj sekwencję…';
-      document.getElementById('btn-simon-start').style.display = 'none';
-      // Disable buttons during show
-      document.querySelectorAll('.emotion-btn').forEach(b => b.style.pointerEvents = 'none');
-
-      await new Promise(r => setTimeout(r, 800));
-      for (const idx of seq) {
-        await flashButton(idx, 650);
-        await new Promise(r => setTimeout(r, 350));
-      }
-
-      document.querySelectorAll('.emotion-btn').forEach(b => b.style.pointerEvents = '');
-      accepting = true;
-      playerInput = [];
-      document.getElementById('simon-status').textContent = '🎯 Teraz Twoja kolej! Tapnij w tej samej kolejności';
-    }
-
-    function startSimon() {
-      sequence = makeSequence();
-      showSequence(sequence);
-    }
-
-    function playerTap(idx) {
-      if (!accepting) return;
-
-      const btn = document.getElementById('e' + idx);
-      btn.classList.add('correct-tap');
-      setTimeout(() => btn.classList.remove('correct-tap'), 300);
-      if (navigator.vibrate) navigator.vibrate(40);
-
-      playerInput.push(idx);
-      const pos = playerInput.length - 1;
-
-      if (playerInput[pos] !== sequence[pos]) {
-        // Wrong tap
-        accepting = false;
-        document.getElementById('simon-status').textContent = '❌ Ups! Powtórzmy sekwencję od nowa…';
-        if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
-        document.getElementById('emotion-grid').classList.add('shake');
-        setTimeout(() => {
-          document.getElementById('emotion-grid').classList.remove('shake');
-          showSequence(sequence);
-        }, 1800);
-        return;
-      }
-
-      if (playerInput.length === sequence.length) {
-        // All correct!
-        accepting = false;
-        onSimonSolved();
-      }
-    }
-
-    function onSimonSolved() {
-      document.getElementById('simon-status').textContent = '🎉 Brawo! Sekwencja poprawna!';
-      document.getElementById('simon-result').style.display = 'block';
-      document.getElementById('btn-simon-start').style.display = 'none';
-      if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 400]);
-      launchConfetti();
-      setTimeout(() => {
-        document.getElementById('victory').style.display = 'block';
-        document.getElementById('victory').scrollIntoView({behavior: 'smooth'});
-        launchConfetti();
-      }, 2800);
-    }
-
-    // ── CONFETTI ─────────────────────────────────────────────
     function launchConfetti() {
       const container = document.createElement('div');
       container.className = 'confetti-container';
       document.body.appendChild(container);
       const colors = ['#c45cd9','#ff6ba8','#2d7dd2','#00b4d8','#ffb347','#52b788'];
-      for (let i = 0; i < 80; i++) {
+      for (let i = 0; i < 60; i++) {
         const p = document.createElement('div');
         p.className = 'confetti-piece';
         p.style.left              = Math.random() * 100 + 'vw';
@@ -543,7 +308,7 @@
         p.style.animationDelay    = (Math.random() * 1.5) + 's';
         container.appendChild(p);
       }
-      setTimeout(() => container.remove(), 6000);
+      setTimeout(() => container.remove(), 5000);
     }
   </script>
 </body>
