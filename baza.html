@@ -6,39 +6,6 @@
   <title>Misja Ania — Baza Stitcha</title>
   <link rel="stylesheet" href="style.css" />
   <style>
-    .hidden { display: none !important; }
-
-    .map-area {
-      border: 3px dashed var(--purple);
-      border-radius: 14px;
-      min-height: 180px;
-      background: var(--surface2);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      padding: 20px;
-      text-align: center;
-    }
-    .map-area img {
-      width: 100%;
-      border-radius: 10px;
-      display: block;
-    }
-
-    .clue-item {
-      display: flex;
-      align-items: flex-start;
-      gap: 14px;
-      padding: 12px 0;
-      border-bottom: 1px solid var(--border);
-      line-height: 1.6;
-      font-size: 0.95rem;
-    }
-    .clue-item:last-child { border-bottom: none; }
-    .clue-icon { font-size: 1.8rem; line-height: 1.1; flex-shrink: 0; }
-
     .nfc-hint {
       border: 2px solid var(--teal);
       border-radius: 12px;
@@ -60,7 +27,7 @@
 
   <div class="page">
 
-    <div class="story-card" id="story-card">
+    <div class="story-card">
       <div class="from">🎀 Wiadomość od Hello Kitty</div>
       Świetna robota! Znasz już trzy kody!<br><br>
       Stitch zdążył przed katastrofą <strong>zakodować ostatnią wiadomość</strong>
@@ -70,37 +37,21 @@
       Jesteście już prawie na miejscu! 💪
     </div>
 
-    <button class="btn btn-primary" id="btn-start" onclick="startGame()"
-      style="font-size:1.2rem;padding:16px 0;">
-      🏠 POKAŻ DROGĘ DO BAZY!
-    </button>
-
-    <div id="game-section" class="hidden">
-
-      <div class="card" style="text-align:center;padding:28px 20px;">
-        <div style="font-size:4rem;margin-bottom:12px">🏠🏃</div>
-        <h2 style="font-size:1.5rem;margin-bottom:10px">Wracajcie szybko do bazy!</h2>
-        <p style="color:var(--muted);line-height:1.7">
-          W bazie znajdziecie <strong>brelok-nadajnik</strong> Stitcha.<br>
-          <strong>Przyłóżcie telefon</strong> żeby go zeskanować<br>
-          i odblokować ostatnie wyzwanie! 🎯
-        </p>
-      </div>
-
-      <div class="nfc-hint">
-        📲 <strong>Zeskanuj brelok</strong> w bazie<br>
-        aby odblokować <strong>ostatni kod reaktora</strong>!
-      </div>
-
+    <div class="card" style="text-align:center;padding:28px 20px;">
+      <div style="font-size:4rem;margin-bottom:12px">🏠🏃</div>
+      <h2 style="font-size:1.5rem;margin-bottom:10px">Wracajcie szybko do bazy!</h2>
+      <p style="color:var(--muted);line-height:1.7">
+        W bazie znajdziecie <strong>brelok-nadajnik</strong> Stitcha.<br>
+        <strong>Przyłóżcie telefon</strong> żeby go zeskanować<br>
+        i odblokować ostatnie wyzwanie! 🎯
+      </p>
     </div>
-  </div>
 
-  <script>
-    function startGame() {
-      document.getElementById('story-card').classList.add('hidden');
-      document.getElementById('btn-start').classList.add('hidden');
-      document.getElementById('game-section').classList.remove('hidden');
-    }
-  </script>
+    <div class="nfc-hint">
+      📲 <strong>Zeskanuj brelok</strong> w bazie<br>
+      aby odblokować <strong>ostatni kod reaktora</strong>!
+    </div>
+
+  </div>
 </body>
 </html>
