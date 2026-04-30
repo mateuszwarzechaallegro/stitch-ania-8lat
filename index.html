@@ -107,7 +107,6 @@
 
     /* ── Reactor icon ── */
     .reactor-icon {
-      font-size: 4rem;
       transition: filter 0.5s;
       filter: grayscale(1) brightness(0.5);
       line-height: 1;
@@ -118,6 +117,9 @@
       animation: glow-pulse 1.5s infinite;
       text-shadow: 0 0 30px var(--teal);
     }
+
+    /* ── Reactor icon — smaller after start ── */
+    .reactor-icon { font-size: 2rem; }
 
     /* ── Utility ── */
     .flex-col { display: flex; flex-direction: column; gap: 10px; align-items: center; width: 100%; }
@@ -133,7 +135,7 @@
   </div>
 
   <div class="page">
-    <div class="story-card">
+    <div class="story-card" id="story-card">
       <div class="from">📡 Wiadomość od Hello Kitty</div>
       Stitch leciał na Twoje urodziny, ale jego statek kosmiczny
       <strong>rozbił się w ogrodzie</strong>!
@@ -141,7 +143,12 @@
       żeby naładować energię. Ruszajcie!
     </div>
 
-    <!-- Overall progress -->
+    <button class="btn btn-primary" id="btn-start" onclick="startGame()" style="font-size:1.3rem;padding:18px 0;">
+      🚀 START — naładuj reaktor!
+    </button>
+
+    <!-- Overall progress + participant — hidden until START -->
+    <div id="game-section" class="hidden">
     <div class="card">
       <h2 style="text-align:center">⚡ Reaktor — postęp drużyny</h2>
       <div class="progress-row" id="progress-row">
@@ -193,6 +200,7 @@
     <a href="zodiak.html" class="btn btn-primary hidden" id="btn-next">
       ⚡ Reaktor naładowany! Odpal systemy →
     </a>
+    </div><!-- /game-section -->
   </div>
 
   <script>
@@ -257,7 +265,7 @@
     }
 
     /* ── Load current participant ── */
-    function loadParticipant() {
+    function loadParticipant(startTimer = false) {
       const p = PARTICIPANTS[currentIdx];
       currentSteps = 0;
       phaseDone    = false;
@@ -275,9 +283,10 @@
       $doneBadge.classList.add('hidden');
       $btnSwitch.classList.add('hidden');
       $btnNext.classList.add('hidden');
+      $btnFallback.classList.add('hidden');
 
       updateDots();
-      resetFallbackTimer();
+      if (startTimer) resetFallbackTimer();
     }
 
     /* ── Update individual bar ── */
@@ -322,7 +331,7 @@
     /* ── Next participant ── */
     function nextParticipant() {
       currentIdx++;
-      loadParticipant();
+      loadParticipant(true);
     }
 
     /* ── Motion ── */
@@ -378,17 +387,34 @@
       }
     }
 
+    /* ── START button ── */
+    const $storyCard  = document.getElementById('story-card');
+    const $btnStart   = document.getElementById('btn-start');
+    const $gameSection = document.getElementById('game-section');
+
+    function startGame() {
+      $storyCard.classList.add('hidden');
+      $btnStart.classList.add('hidden');
+      $gameSection.classList.remove('hidden');
+
+      // Start sensor (request permission on iOS, auto-start on Android)
+      if (typeof DeviceMotionEvent !== 'undefined' &&
+          typeof DeviceMotionEvent.requestPermission === 'function') {
+        DeviceMotionEvent.requestPermission()
+          .then(state => {
+            if (state === 'granted') startListening();
+            else $btnFallback.classList.remove('hidden');
+          })
+          .catch(() => $btnFallback.classList.remove('hidden'));
+      } else {
+        startListening();
+      }
+      resetFallbackTimer();
+    }
+
     /* ── Init ── */
     buildDots();
     loadParticipant();
-
-    if (typeof DeviceMotionEvent !== 'undefined' &&
-        typeof DeviceMotionEvent.requestPermission !== 'function') {
-      startListening();
-    } else {
-      $permHint.classList.remove('hidden');
-      $btnPerm.classList.remove('hidden');
-    }
   </script>
 </body>
 </html>
