@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hafty Ani – 8 lat twórczości 🧵</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Georgia', serif;
+      background: #fff8f4;
+      color: #4a2c2a;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    header {
+      width: 100%;
+      background: linear-gradient(135deg, #e8a0a0, #f5c6c6);
+      text-align: center;
+      padding: 3rem 1rem 2rem;
+      border-bottom: 4px solid #c97070;
+    }
+
+    header h1 {
+      font-size: 2.8rem;
+      letter-spacing: 0.02em;
+      color: #6b1f1f;
+    }
+
+    header p {
+      margin-top: 0.75rem;
+      font-size: 1.2rem;
+      color: #7a3b3b;
+    }
+
+    .badge {
+      display: inline-block;
+      margin-top: 1.2rem;
+      background: #c97070;
+      color: #fff;
+      padding: 0.4rem 1.2rem;
+      border-radius: 999px;
+      font-size: 1rem;
+      letter-spacing: 0.05em;
+    }
+
+    main {
+      max-width: 860px;
+      width: 100%;
+      padding: 3rem 1.5rem;
+    }
+
+    .intro {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+
+    .intro p {
+      font-size: 1.1rem;
+      line-height: 1.8;
+      color: #6b3b3b;
+    }
+
+    .intro .emoji-row {
+      font-size: 2.5rem;
+      margin: 1rem 0;
+      letter-spacing: 0.3rem;
+    }
+
+    .gallery-hint {
+      background: #fdecea;
+      border-left: 5px solid #e57373;
+      border-radius: 6px;
+      padding: 1.2rem 1.5rem;
+      margin-bottom: 3rem;
+      font-size: 1rem;
+      line-height: 1.7;
+      color: #6b2e2e;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+    }
+
+    .card {
+      background: #fff;
+      border: 2px solid #f5c6c6;
+      border-radius: 12px;
+      padding: 1.5rem;
+      text-align: center;
+      box-shadow: 0 2px 8px rgba(200, 100, 100, 0.1);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 6px 18px rgba(200, 100, 100, 0.18);
+    }
+
+    .card .icon {
+      font-size: 2.8rem;
+      margin-bottom: 0.6rem;
+    }
+
+    .card h3 {
+      font-size: 1.1rem;
+      color: #6b1f1f;
+      margin-bottom: 0.4rem;
+    }
+
+    .card p {
+      font-size: 0.95rem;
+      color: #7a4f4f;
+      line-height: 1.6;
+    }
+
+    footer {
+      width: 100%;
+      text-align: center;
+      padding: 1.5rem 1rem;
+      background: #fdecea;
+      border-top: 3px solid #f5c6c6;
+      font-size: 0.9rem;
+      color: #8a5555;
+    }
+
+    footer a {
+      color: #c97070;
+      text-decoration: none;
+    }
+
+    footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>🧵 Hafty Ani</h1>
+    <p>Osiem lat z igłą i nicią</p>
+    <span class="badge">✨ 8 lat twórczości ✨</span>
+  </header>
+
+  <main>
+    <section class="intro">
+      <div class="emoji-row">🌸🌼🦋🌺🌻</div>
+      <p>
+        Witaj! To jest strona poświęcona haftom, które Ania tworzyła
+        przez ostatnie 8 lat. Każdy ścieg to kawałek serca i cierpliwości –
+        zapraszamy do odkrywania tej pięknej kolekcji.
+      </p>
+    </section>
+
+    <div class="gallery-hint">
+      📷 <strong>Galeria wzorów już wkrótce!</strong> Kolekcja haftów będzie dostępna na tej stronie.
+      W międzyczasie możesz zajrzeć do
+      <a href="https://github.com/mateuszwarzechaallegro/stitch-ania-8lat">repozytorium projektu</a>.
+    </div>
+
+    <div class="cards">
+      <div class="card">
+        <div class="icon">🧵</div>
+        <h3>Wzory krzyżykowe</h3>
+        <p>Klasyczne hafty krzyżykowe w różnych rozmiarach i kolorach.</p>
+      </div>
+      <div class="card">
+        <div class="icon">🌸</div>
+        <h3>Motywy kwiatowe</h3>
+        <p>Kwiaty, liście i roślinne kompozycje utkane nitką.</p>
+      </div>
+      <div class="card">
+        <div class="icon">🦋</div>
+        <h3>Wzory zwierzęce</h3>
+        <p>Motyle, ptaszki i inne zwierzęta haftowane z pasją.</p>
+      </div>
+      <div class="card">
+        <div class="icon">🎨</div>
+        <h3>Własne projekty</h3>
+        <p>Oryginalne wzory stworzone od podstaw przez Anię.</p>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    <p>Stworzone z ❤️ przez Anię &nbsp;|&nbsp;
+      <a href="https://github.com/mateuszwarzechaallegro/stitch-ania-8lat">GitHub</a>
+    </p>
+  </footer>
+
+</body>
+</html>
