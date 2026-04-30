@@ -2,202 +2,180 @@
 <html lang="pl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Hafty Ani – 8 lat twórczości 🧵</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Misja Ania — Start</title>
+  <link rel="stylesheet" href="style.css" />
   <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    body {
-      font-family: 'Georgia', serif;
-      background: #fff8f4;
-      color: #4a2c2a;
-      min-height: 100vh;
+    .reactor-wrap {
       display: flex;
       flex-direction: column;
       align-items: center;
+      gap: 12px;
     }
-
-    header {
+    .reactor-icon {
+      font-size: 5rem;
+      transition: filter 0.5s;
+      filter: grayscale(1) brightness(0.5);
+      line-height: 1;
+    }
+    .reactor-icon.charged {
+      filter: none;
+      animation: glow-pulse 1.5s infinite;
+      text-shadow: 0 0 30px var(--teal);
+    }
+    .bar-track {
       width: 100%;
-      background: linear-gradient(135deg, #e8a0a0, #f5c6c6);
-      text-align: center;
-      padding: 3rem 1rem 2rem;
-      border-bottom: 4px solid #c97070;
-    }
-
-    header h1 {
-      font-size: 2.8rem;
-      letter-spacing: 0.02em;
-      color: #6b1f1f;
-    }
-
-    header p {
-      margin-top: 0.75rem;
-      font-size: 1.2rem;
-      color: #7a3b3b;
-    }
-
-    .badge {
-      display: inline-block;
-      margin-top: 1.2rem;
-      background: #c97070;
-      color: #fff;
-      padding: 0.4rem 1.2rem;
+      height: 32px;
+      background: var(--surface2);
+      border: 2px solid var(--border);
       border-radius: 999px;
-      font-size: 1rem;
-      letter-spacing: 0.05em;
+      overflow: hidden;
     }
-
-    main {
-      max-width: 860px;
-      width: 100%;
-      padding: 3rem 1.5rem;
+    .bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--blue), var(--teal), var(--purple));
+      border-radius: 999px;
+      transition: width 0.4s ease;
     }
-
-    .intro {
+    .bar-label {
+      font-size: 0.85rem;
+      color: var(--muted);
       text-align: center;
-      margin-bottom: 3rem;
     }
-
-    .intro p {
-      font-size: 1.1rem;
-      line-height: 1.8;
-      color: #6b3b3b;
-    }
-
-    .intro .emoji-row {
+    .steps-count {
       font-size: 2.5rem;
-      margin: 1rem 0;
-      letter-spacing: 0.3rem;
-    }
-
-    .gallery-hint {
-      background: #fdecea;
-      border-left: 5px solid #e57373;
-      border-radius: 6px;
-      padding: 1.2rem 1.5rem;
-      margin-bottom: 3rem;
-      font-size: 1rem;
-      line-height: 1.7;
-      color: #6b2e2e;
-    }
-
-    .cards {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-      gap: 1.5rem;
-      margin-bottom: 3rem;
-    }
-
-    .card {
-      background: #fff;
-      border: 2px solid #f5c6c6;
-      border-radius: 12px;
-      padding: 1.5rem;
+      font-weight: 800;
+      color: var(--teal);
       text-align: center;
-      box-shadow: 0 2px 8px rgba(200, 100, 100, 0.1);
-      transition: transform 0.2s, box-shadow 0.2s;
+      font-variant-numeric: tabular-nums;
     }
-
-    .card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 6px 18px rgba(200, 100, 100, 0.18);
-    }
-
-    .card .icon {
-      font-size: 2.8rem;
-      margin-bottom: 0.6rem;
-    }
-
-    .card h3 {
-      font-size: 1.1rem;
-      color: #6b1f1f;
-      margin-bottom: 0.4rem;
-    }
-
-    .card p {
-      font-size: 0.95rem;
-      color: #7a4f4f;
-      line-height: 1.6;
-    }
-
-    footer {
-      width: 100%;
-      text-align: center;
-      padding: 1.5rem 1rem;
-      background: #fdecea;
-      border-top: 3px solid #f5c6c6;
-      font-size: 0.9rem;
-      color: #8a5555;
-    }
-
-    footer a {
-      color: #c97070;
-      text-decoration: none;
-    }
-
-    footer a:hover {
-      text-decoration: underline;
-    }
+    #btn-next      { display: none; }
+    #btn-fallback  { display: none; }
+    #permission-hint { font-size: 0.8rem; color: var(--muted); text-align: center; display: none; }
   </style>
 </head>
 <body>
+  <div class="page-header">
+    <div class="chars">👾🎀</div>
+    <h1>Misja: Naprawa Statku</h1>
+    <span class="step-badge">Etap 1 z 4</span>
+  </div>
 
-  <header>
-    <h1>🧵 Hafty Ani</h1>
-    <p>Osiem lat z igłą i nicią</p>
-    <span class="badge">✨ 8 lat twórczości ✨</span>
-  </header>
-
-  <main>
-    <section class="intro">
-      <div class="emoji-row">🌸🌼🦋🌺🌻</div>
-      <p>
-        Witaj! To jest strona poświęcona haftom, które Ania tworzyła
-        przez ostatnie 8 lat. Każdy ścieg to kawałek serca i cierpliwości –
-        zapraszamy do odkrywania tej pięknej kolekcji.
-      </p>
-    </section>
-
-    <div class="gallery-hint">
-      📷 <strong>Galeria wzorów już wkrótce!</strong> Kolekcja haftów będzie dostępna na tej stronie.
-      W międzyczasie możesz zajrzeć do
-      <a href="https://github.com/mateuszwarzechaallegro/stitch-ania-8lat">repozytorium projektu</a>.
+  <div class="page">
+    <div class="story-card">
+      <div class="from">📡 Wiadomość od Hello Kitty</div>
+      Stitch leciał na Twoje urodziny, ale jego statek kosmiczny <strong>rozbił się w ogrodzie</strong>!
+      Reaktor jest <strong>ZUPEŁNIE PUSTY</strong>. Musisz naładować energię zanim uruchomisz systemy pokładowe.
+      <br><br>
+      <strong>🏃 BIEGNIJ żeby naładować reaktor!</strong>
     </div>
 
-    <div class="cards">
-      <div class="card">
-        <div class="icon">🧵</div>
-        <h3>Wzory krzyżykowe</h3>
-        <p>Klasyczne hafty krzyżykowe w różnych rozmiarach i kolorach.</p>
-      </div>
-      <div class="card">
-        <div class="icon">🌸</div>
-        <h3>Motywy kwiatowe</h3>
-        <p>Kwiaty, liście i roślinne kompozycje utkane nitką.</p>
-      </div>
-      <div class="card">
-        <div class="icon">🦋</div>
-        <h3>Wzory zwierzęce</h3>
-        <p>Motyle, ptaszki i inne zwierzęta haftowane z pasją.</p>
-      </div>
-      <div class="card">
-        <div class="icon">🎨</div>
-        <h3>Własne projekty</h3>
-        <p>Oryginalne wzory stworzone od podstaw przez Anię.</p>
+    <div class="card">
+      <h2>⚡ Poziom energii reaktora</h2>
+      <div class="reactor-wrap">
+        <div class="reactor-icon" id="reactor-icon">🔋</div>
+        <div class="steps-count">
+          <span id="steps-display">0</span> / 200 kroków
+        </div>
+        <div class="bar-track">
+          <div class="bar-fill" id="bar-fill"></div>
+        </div>
+        <div class="bar-label" id="bar-label">Biegnij żeby naładować!</div>
       </div>
     </div>
-  </main>
 
-  <footer>
-    <p>Stworzone z ❤️ przez Anię &nbsp;|&nbsp;
-      <a href="https://github.com/mateuszwarzechaallegro/stitch-ania-8lat">GitHub</a>
-    </p>
-  </footer>
+    <p id="permission-hint">Naciśnij przycisk poniżej aby zezwolić na dostęp do czujnika ruchu.</p>
+    <button class="btn btn-secondary" id="btn-permission" onclick="requestPermission()">
+      🔓 Zezwól na dostęp do ruchu
+    </button>
 
+    <a href="zodiak.html" class="btn btn-primary" id="btn-next">
+      ⚡ Reaktor naładowany! Odpal systemy →
+    </a>
+    <button class="btn btn-secondary" id="btn-fallback"
+      onclick="document.getElementById('btn-next').style.display='block'; this.style.display='none';">
+      ⏭️ Pomiń (awaria czujnika)
+    </button>
+  </div>
+
+  <script>
+    const TARGET = 200;
+    let steps = 0;
+    let lastMag = 0;
+    let fallbackTimer = null;
+
+    const stepsDisplay = document.getElementById('steps-display');
+    const barFill      = document.getElementById('bar-fill');
+    const barLabel     = document.getElementById('bar-label');
+    const reactorIcon  = document.getElementById('reactor-icon');
+    const btnNext      = document.getElementById('btn-next');
+    const btnFallback  = document.getElementById('btn-fallback');
+    const btnPerm      = document.getElementById('btn-permission');
+    const permHint     = document.getElementById('permission-hint');
+
+    function updateBar() {
+      const pct = Math.min(steps / TARGET * 100, 100);
+      barFill.style.width = pct + '%';
+      stepsDisplay.textContent = Math.min(steps, TARGET);
+
+      if (steps >= TARGET) {
+        barLabel.textContent = '✅ Reaktor w pełni naładowany!';
+        reactorIcon.textContent = '⚡';
+        reactorIcon.classList.add('charged');
+        btnNext.style.display = 'block';
+        if (fallbackTimer) clearTimeout(fallbackTimer);
+        if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+      } else {
+        const pctInt = Math.round(pct);
+        barLabel.textContent = pctInt + '% — jeszcze ' + (TARGET - steps) + ' kroków!';
+      }
+    }
+
+    function handleMotion(e) {
+      const a = e.accelerationIncludingGravity;
+      if (!a || a.x == null) return;
+      const mag = Math.sqrt(a.x * a.x + a.y * a.y + a.z * a.z);
+      // Detect step: magnitude crosses threshold upward
+      if (mag > 14 && lastMag <= 14 && steps < TARGET) {
+        steps++;
+        updateBar();
+      }
+      lastMag = mag;
+    }
+
+    function startListening() {
+      window.addEventListener('devicemotion', handleMotion);
+      btnPerm.style.display = 'none';
+      permHint.style.display = 'none';
+      // Show fallback after 30s if sensor not working
+      fallbackTimer = setTimeout(() => {
+        if (steps < 5) btnFallback.style.display = 'block';
+      }, 30000);
+    }
+
+    function requestPermission() {
+      if (typeof DeviceMotionEvent !== 'undefined' &&
+          typeof DeviceMotionEvent.requestPermission === 'function') {
+        DeviceMotionEvent.requestPermission()
+          .then(state => {
+            if (state === 'granted') startListening();
+          })
+          .catch(() => { btnFallback.style.display = 'block'; });
+      } else {
+        startListening();
+      }
+    }
+
+    // Auto-start on Android Chrome (no permission prompt needed)
+    if (typeof DeviceMotionEvent !== 'undefined' &&
+        typeof DeviceMotionEvent.requestPermission !== 'function') {
+      startListening();
+      btnPerm.style.display = 'none';
+    } else {
+      // iOS or browser requiring explicit permission
+      permHint.style.display = 'block';
+    }
+  </script>
 </body>
 </html>

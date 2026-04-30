@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Misja Ania — Labirynt</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .maze-wrap {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+    }
+    #maze-canvas {
+      border: 3px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: #060612;
+      touch-action: none;
+      cursor: crosshair;
+      width: 100%;
+      max-width: 360px;
+      height: auto;
+      display: block;
+    }
+    .maze-hint {
+      font-size: 0.82rem;
+      color: var(--muted);
+      text-align: center;
+    }
+    #maze-status {
+      font-size: 0.88rem;
+      text-align: center;
+      color: var(--muted);
+      min-height: 1.3em;
+      font-weight: 600;
+    }
+    #zodiac-reveal {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      padding-top: 12px;
+      animation: pop-in 0.5s ease both;
+    }
+    .big-zodiac-sign {
+      font-size: 5rem;
+      filter: drop-shadow(0 0 20px var(--purple));
+      animation: glow-pulse 2s infinite;
+      line-height: 1;
+    }
+    #zodiac-reveal p {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--success);
+      text-align: center;
+      line-height: 1.6;
+    }
+    #btn-next-zodiak { display: none; }
+  </style>
+</head>
+<body>
+  <div class="page-header">
+    <div class="chars">🔭✨</div>
+    <h1>Labirynt Kosmiczny</h1>
+    <span class="step-badge">Etap 2 z 4</span>
+  </div>
+
+  <div class="page">
+    <div class="story-card">
+      <div class="from">🖥️ Komputer pokładowy</div>
+      System nawigacyjny wymaga kodu dostępu. Hasło to <strong>Twój kosmiczny znak</strong>.
+      Komputer zaszyfrował go w labiryncie.
+      <br><br>
+      <strong>✏️ Przeprowadź rysik przez labirynt — ścieżka ujawni odpowiedź!</strong>
+    </div>
+
+    <div class="card">
+      <div class="maze-wrap">
+        <div class="maze-hint">▶ Wejście: lewy-górny róg &nbsp;|&nbsp; ★ Wyjście: prawy-dolny róg</div>
+        <canvas id="maze-canvas"></canvas>
+        <div id="maze-status">Dotknij wejścia (lewy-górny róg) i prowadź do wyjścia</div>
+      </div>
+
+      <div id="zodiac-reveal">
+        <div class="big-zodiac-sign">♉</div>
+        <p>Komputer przeliczył Twoją trasę…<br>
+          Odkryłaś swój kosmiczny znak —<br>
+          <strong>BYK ♉</strong>!<br>
+          Ustaw ten symbol na pudełku!</p>
+      </div>
+    </div>
+
+    <!-- Always-visible skip button -->
+    <a href="misja.html" class="btn btn-secondary" id="btn-always">
+      ➡️ Idź dalej (znam już znak)
+    </a>
+    <!-- Appears after maze solved -->
+    <a href="misja.html" class="btn btn-primary" id="btn-next-zodiak">
+      🚀 System odblokowany! Następna misja →
+    </a>
+  </div>
+
+  <script>
+    // ── CONFIG ───────────────────────────────────────────────
+    const COLS = 9, ROWS = 11, CELL = 34;
+    const W = COLS * CELL, H = ROWS * CELL;
+
+    const canvas = document.getElementById('maze-canvas');
+    const ctx    = canvas.getContext('2d');
+    canvas.width  = W;
+    canvas.height = H;
+
+    // ── MAZE GENERATION (recursive backtracker) ──────────────
+    function shuffle(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function buildMaze() {
+      // walls[row][col] = {top, right, bottom, left}  true = wall present
+      const walls = Array.from({length: ROWS}, () =>
+        Array.from({length: COLS}, () =>
+          ({top: true, right: true, bottom: true, left: true})
+        )
+      );
+      const visited = Array.from({length: ROWS}, () => new Array(COLS).fill(false));
+      const DIRS = [
+        {dc:  0, dr: -1, w: 'top',    ow: 'bottom'},
+        {dc:  1, dr:  0, w: 'right',  ow: 'left'},
+        {dc:  0, dr:  1, w: 'bottom', ow: 'top'},
+        {dc: -1, dr:  0, w: 'left',   ow: 'right'},
+      ];
+
+      function carve(c, r) {
+        visited[r][c] = true;
+        shuffle([...DIRS]).forEach(({dc, dr, w, ow}) => {
+          const nc = c + dc, nr = r + dr;
+          if (nc >= 0 && nc < COLS && nr >= 0 && nr < ROWS && !visited[nr][nc]) {
+            walls[r][c][w]    = false;
+            walls[nr][nc][ow] = false;
+            carve(nc, nr);
+          }
+        });
+      }
+
+      carve(0, 0);
+      // Open entrance top-wall of (0,0) and exit bottom-wall of (COLS-1, ROWS-1)
+      walls[0][0].top                     = false;
+      walls[ROWS - 1][COLS - 1].bottom    = false;
+      return walls;
+    }
+
+    const mazeWalls = buildMaze();
+
+    // ── DRAW ─────────────────────────────────────────────────
+    function drawMaze(tracePath) {
+      ctx.clearRect(0, 0, W, H);
+
+      // Background
+      ctx.fillStyle = '#060612';
+      ctx.fillRect(0, 0, W, H);
+
+      // Draw trace path
+      if (tracePath && tracePath.length > 1) {
+        ctx.save();
+        ctx.strokeStyle = 'rgba(196, 92, 217, 0.65)';
+        ctx.lineWidth = 10;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.beginPath();
+        ctx.moveTo(tracePath[0].x, tracePath[0].y);
+        for (let i = 1; i < tracePath.length; i++) ctx.lineTo(tracePath[i].x, tracePath[i].y);
+        ctx.stroke();
+        ctx.restore();
+      }
+
+      // Draw walls
+      ctx.save();
+      ctx.strokeStyle = '#4a3080';
+      ctx.lineWidth = 2;
+      ctx.lineCap = 'square';
+
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+          const x = c * CELL, y = r * CELL;
+          const w = mazeWalls[r][c];
+          ctx.beginPath();
+          if (w.top)    { ctx.moveTo(x,        y);        ctx.lineTo(x + CELL, y);        }
+          if (w.right)  { ctx.moveTo(x + CELL,  y);       ctx.lineTo(x + CELL, y + CELL); }
+          if (w.bottom) { ctx.moveTo(x,        y + CELL); ctx.lineTo(x + CELL, y + CELL); }
+          if (w.left)   { ctx.moveTo(x,         y);       ctx.lineTo(x,        y + CELL); }
+          ctx.stroke();
+        }
+      }
+      ctx.restore();
+
+      // Entrance marker
+      ctx.save();
+      ctx.fillStyle = '#00b4d8';
+      ctx.font = `bold ${CELL - 4}px system-ui`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('▶', CELL / 2, CELL / 2);
+      ctx.restore();
+
+      // Exit marker
+      ctx.save();
+      ctx.fillStyle = '#ff6ba8';
+      ctx.font = `bold ${CELL - 4}px system-ui`;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('★', W - CELL / 2, H - CELL / 2);
+      ctx.restore();
+    }
+
+    // ── POINTER TRACKING ─────────────────────────────────────
+    const tracePath = [];
+    let tracking = false;
+    let solved   = false;
+
+    function ptInCanvas(e) {
+      const rect   = canvas.getBoundingClientRect();
+      const scaleX = W / rect.width;
+      const scaleY = H / rect.height;
+      const src    = e.touches ? e.touches[0] : e;
+      return {
+        x: (src.clientX - rect.left) * scaleX,
+        y: (src.clientY - rect.top)  * scaleY,
+      };
+    }
+
+    function hitsWall(x, y) {
+      const c  = Math.floor(x / CELL);
+      const r  = Math.floor(y / CELL);
+      if (c < 0 || c >= COLS || r < 0 || r >= ROWS) return true;
+      const w  = mazeWalls[r][c];
+      const lx = x - c * CELL;
+      const ly = y - r * CELL;
+      const M  = 5; // collision margin in pixels
+      if (w.top    && ly < M)           return true;
+      if (w.bottom && ly > CELL - M)    return true;
+      if (w.left   && lx < M)           return true;
+      if (w.right  && lx > CELL - M)    return true;
+      return false;
+    }
+
+    function isNearEntrance(x, y) {
+      // Top-left 2×2 cells
+      return x < CELL * 2 && y < CELL * 2;
+    }
+
+    function isAtExit(x, y) {
+      // Bottom-right cell, bottom 40%
+      return x > (COLS - 1) * CELL && y > (ROWS - 1) * CELL + CELL * 0.4;
+    }
+
+    function onStart(e) {
+      e.preventDefault();
+      if (solved) return;
+      const {x, y} = ptInCanvas(e);
+      if (isNearEntrance(x, y)) {
+        tracking = true;
+        tracePath.length = 0;
+        tracePath.push({x, y});
+        drawMaze(tracePath);
+        document.getElementById('maze-status').textContent = 'Prowadź rysik przez labirynt…';
+      }
+    }
+
+    function onMove(e) {
+      e.preventDefault();
+      if (!tracking || solved) return;
+      const {x, y} = ptInCanvas(e);
+
+      if (hitsWall(x, y)) {
+        tracking = false;
+        tracePath.length = 0;
+        drawMaze([]);
+        document.getElementById('maze-status').textContent = '💥 Ups! Trafiono w ścianę — zacznij od nowa';
+        if (navigator.vibrate) navigator.vibrate(120);
+        return;
+      }
+
+      tracePath.push({x, y});
+      drawMaze(tracePath);
+
+      if (isAtExit(x, y)) onSolved();
+    }
+
+    function onEnd(e) {
+      e.preventDefault();
+      tracking = false;
+    }
+
+    function onSolved() {
+      solved   = true;
+      tracking = false;
+
+      // Draw final glowing path
+      ctx.save();
+      ctx.strokeStyle = 'rgba(255, 107, 168, 0.95)';
+      ctx.lineWidth = 12;
+      ctx.lineCap   = 'round';
+      ctx.lineJoin  = 'round';
+      ctx.shadowColor = '#ff6ba8';
+      ctx.shadowBlur  = 16;
+      ctx.beginPath();
+      if (tracePath.length > 0) {
+        ctx.moveTo(tracePath[0].x, tracePath[0].y);
+        for (let i = 1; i < tracePath.length; i++) ctx.lineTo(tracePath[i].x, tracePath[i].y);
+      }
+      ctx.stroke();
+      ctx.restore();
+
+      document.getElementById('maze-status').textContent = '🎉 Dotarłaś do wyjścia!';
+
+      setTimeout(() => {
+        const reveal = document.getElementById('zodiac-reveal');
+        reveal.style.display = 'flex';
+        document.getElementById('btn-next-zodiak').style.display = 'block';
+        if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 300]);
+        launchConfetti();
+      }, 500);
+    }
+
+    canvas.addEventListener('pointerdown',   onStart, {passive: false});
+    canvas.addEventListener('pointermove',   onMove,  {passive: false});
+    canvas.addEventListener('pointerup',     onEnd,   {passive: false});
+    canvas.addEventListener('pointercancel', onEnd,   {passive: false});
+
+    // ── CONFETTI ─────────────────────────────────────────────
+    function launchConfetti() {
+      const container = document.createElement('div');
+      container.className = 'confetti-container';
+      document.body.appendChild(container);
+      const colors = ['#c45cd9','#ff6ba8','#2d7dd2','#00b4d8','#ffb347','#52b788'];
+      for (let i = 0; i < 60; i++) {
+        const p = document.createElement('div');
+        p.className = 'confetti-piece';
+        p.style.left              = Math.random() * 100 + 'vw';
+        p.style.background        = colors[Math.floor(Math.random() * colors.length)];
+        p.style.width             = (8 + Math.random() * 8) + 'px';
+        p.style.height            = (8 + Math.random() * 8) + 'px';
+        p.style.animationDuration = (2 + Math.random() * 2) + 's';
+        p.style.animationDelay    = (Math.random() * 1) + 's';
+        container.appendChild(p);
+      }
+      setTimeout(() => container.remove(), 5000);
+    }
+
+    // Initial draw
+    drawMaze([]);
+  </script>
+</body>
+</html>

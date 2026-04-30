@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>Misja Ania — Sygnał Awaryjny</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    .timer-display {
+      text-align: center;
+      font-size: 4.5rem;
+      font-weight: 900;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.06em;
+      color: var(--teal);
+      text-shadow: 0 0 20px rgba(0, 180, 216, 0.6);
+      transition: color 0.5s, text-shadow 0.5s;
+      line-height: 1.1;
+    }
+    .timer-display.urgent {
+      color: var(--pink);
+      text-shadow: 0 0 20px rgba(255, 107, 168, 0.8);
+      animation: glow-pulse 0.8s infinite;
+    }
+    .timer-display.expired {
+      color: var(--muted);
+      text-shadow: none;
+      animation: none;
+    }
+    .timer-label {
+      text-align: center;
+      font-size: 0.82rem;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+    #map2-section  { display: none; }
+    .map-note {
+      font-size: 0.82rem;
+      color: var(--muted);
+      line-height: 1.5;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="page-header">
+    <div class="chars">📡⚠️</div>
+    <h1>Sygnał Awaryjny</h1>
+    <span class="step-badge">Etap 3 z 4</span>
+  </div>
+
+  <div class="page">
+
+    <div class="story-card">
+      <div class="from">🛸 Systemy pokładowe</div>
+      Skanery pokładowe wykryły sygnał zagubionej <strong>części reaktora</strong>!
+      Sygnał jest słaby i zaniknie za <strong>5 minut</strong>.
+      Idźcie w zaznaczone miejsce na mapce.
+      <br><br>
+      🔊 <strong>Gdy usłyszycie pikanie — jesteście blisko!</strong>
+    </div>
+
+    <!-- Countdown timer -->
+    <div class="card">
+      <h2>⏱️ Odliczanie do zaniku sygnału</h2>
+      <div class="timer-display" id="timer">5:00</div>
+      <div class="timer-label" id="timer-label">Śpieszcie się!</div>
+    </div>
+
+    <!-- Map 1 placeholder -->
+    <div class="card">
+      <h2>🗺️ Mapa sygnału</h2>
+      <div class="map-placeholder">
+        <div class="map-icon">🗺️</div>
+        <strong>MAPA #1 — PLACEHOLDER</strong>
+        <div style="font-size:0.75rem; padding:0 10px">
+          Podmień ten obszar na zrzut ekranu<br>z Google Maps z lokalizacją celu
+        </div>
+      </div>
+      <p class="map-note">
+        📍 Idźcie w zaznaczone miejsce. Gdy urządzenie zacznie pikać — szukajcie zakopan breloka NFC.
+        Zeskanujcie go — otworzy mapę do kolejnego miejsca!
+      </p>
+    </div>
+
+    <!-- Code input — always visible -->
+    <div class="card" id="code-section">
+      <h2>🔢 Numer seryjny części</h2>
+      <p style="margin-bottom: 14px;">
+        Znalazłyście brelok i dotarłyście do drzewa ze znakiem?
+        Wpisz <strong>numer seryjny</strong>, który widzisz na tabliczce:
+      </p>
+      <div class="input-row">
+        <input
+          type="number"
+          id="code-input"
+          placeholder="?"
+          inputmode="numeric"
+          min="0" max="9"
+        />
+        <button class="btn btn-primary" onclick="checkCode()">Sprawdź</button>
+      </div>
+      <div class="error-msg" id="code-error"></div>
+    </div>
+
+    <!-- Success state -->
+    <div class="success-box" id="code-success">
+      <div class="big-symbol">🎉</div>
+      <p>
+        Cyfra <strong style="font-size:1.4rem">3</strong> — zapamiętaj ją!<br>
+        To numer do ustawienia na pudełku.<br><br>
+        Teraz lecicie do <strong>BAZY</strong>! 🚀
+      </p>
+    </div>
+
+    <!-- Map 2 — shown after correct code -->
+    <div id="map2-section">
+      <div class="card">
+        <h2>🏠 Mapa bazy</h2>
+        <div class="map-placeholder">
+          <div class="map-icon">🏠</div>
+          <strong>MAPA #2 — PLACEHOLDER</strong>
+          <div style="font-size:0.75rem; padding:0 10px">
+            Podmień na mapę z lokalizacją bazy<br>przed imprezą
+          </div>
+        </div>
+        <p class="map-note">
+          🔍 W bazie szukajcie kolejnego breloka NFC — zeskanujcie go aby dostać <strong>ostatnie zadanie</strong>!
+        </p>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // ── TIMER ────────────────────────────────────────────────
+    const DURATION  = 5 * 60 * 1000; // 5 minutes in ms
+    const START_KEY = 'misja_timer_start';
+    const timerEl   = document.getElementById('timer');
+    const labelEl   = document.getElementById('timer-label');
+
+    function formatTime(ms) {
+      const total = Math.max(0, Math.ceil(ms / 1000));
+      const m = Math.floor(total / 60);
+      const s = total % 60;
+      return m + ':' + String(s).padStart(2, '0');
+    }
+
+    function tick() {
+      const start     = parseInt(localStorage.getItem(START_KEY) || Date.now(), 10);
+      const elapsed   = Date.now() - start;
+      const remaining = DURATION - elapsed;
+
+      timerEl.textContent = formatTime(remaining);
+      timerEl.classList.remove('urgent', 'expired');
+
+      if (remaining <= 0) {
+        timerEl.textContent = '0:00';
+        timerEl.classList.add('expired');
+        labelEl.textContent = 'Sygnał zanikł — ale część gdzieś tu jest! Szukajcie!';
+        return;
+      }
+
+      if (remaining < 60000) timerEl.classList.add('urgent');
+
+      requestAnimationFrame(tick);
+    }
+
+    // Start timer once per visit; persists across refreshes
+    if (!localStorage.getItem(START_KEY)) {
+      localStorage.setItem(START_KEY, String(Date.now()));
+    }
+    tick();
+
+    // ── CODE CHECK ───────────────────────────────────────────
+    const CORRECT = '3';
+    let codeSolved = false;
+
+    function checkCode() {
+      if (codeSolved) return;
+      const val   = (document.getElementById('code-input').value || '').trim();
+      const errEl = document.getElementById('code-error');
+
+      if (val === CORRECT) {
+        codeSolved = true;
+        document.getElementById('code-section').style.display = 'none';
+        document.getElementById('code-success').classList.add('visible');
+        document.getElementById('map2-section').style.display  = 'block';
+        document.getElementById('map2-section').scrollIntoView({behavior: 'smooth'});
+        if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 400]);
+        launchConfetti();
+      } else {
+        errEl.textContent = '❌ Nie to… Sprawdź jeszcze raz znak na drzewie.';
+        const inp = document.getElementById('code-input');
+        inp.classList.add('shake');
+        inp.addEventListener('animationend', () => inp.classList.remove('shake'), {once: true});
+      }
+    }
+
+    document.getElementById('code-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') checkCode();
+    });
+
+    // ── CONFETTI ─────────────────────────────────────────────
+    function launchConfetti() {
+      const container = document.createElement('div');
+      container.className = 'confetti-container';
+      document.body.appendChild(container);
+      const colors = ['#c45cd9','#ff6ba8','#2d7dd2','#00b4d8','#ffb347','#52b788'];
+      for (let i = 0; i < 80; i++) {
+        const p = document.createElement('div');
+        p.className = 'confetti-piece';
+        p.style.left              = Math.random() * 100 + 'vw';
+        p.style.background        = colors[Math.floor(Math.random() * colors.length)];
+        p.style.width             = (8 + Math.random() * 8) + 'px';
+        p.style.height            = (8 + Math.random() * 8) + 'px';
+        p.style.animationDuration = (2 + Math.random() * 2) + 's';
+        p.style.animationDelay    = (Math.random() * 1.5) + 's';
+        container.appendChild(p);
+      }
+      setTimeout(() => container.remove(), 6000);
+    }
+  </script>
+</body>
+</html>
