@@ -6,26 +6,51 @@
   <title>Misja Ania — Start</title>
   <link rel="stylesheet" href="style.css" />
   <style>
-    .reactor-wrap {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 12px;
+    /* ── Participant card ── */
+    .participant-card {
+      background: var(--surface2);
+      border: 2px solid var(--purple);
+      border-radius: 16px;
+      padding: 18px 16px;
+      text-align: center;
+      margin-bottom: 4px;
     }
-    .reactor-icon {
-      font-size: 5rem;
-      transition: filter 0.5s;
-      filter: grayscale(1) brightness(0.5);
+    .participant-avatar {
+      font-size: 4rem;
+      line-height: 1;
+      margin-bottom: 4px;
+    }
+    .participant-name {
+      font-size: 1.8rem;
+      font-weight: 800;
+      color: var(--pink);
+      margin: 0;
+    }
+    .participant-target {
+      font-size: 0.9rem;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    /* ── Step counter ── */
+    .steps-count {
+      font-size: 2.8rem;
+      font-weight: 800;
+      color: var(--teal);
+      text-align: center;
+      font-variant-numeric: tabular-nums;
       line-height: 1;
     }
-    .reactor-icon.charged {
-      filter: none;
-      animation: glow-pulse 1.5s infinite;
-      text-shadow: 0 0 30px var(--teal);
+    .steps-count .of {
+      font-size: 1.1rem;
+      color: var(--muted);
+      font-weight: 400;
     }
+
+    /* ── Bar ── */
     .bar-track {
       width: 100%;
-      height: 32px;
+      height: 28px;
       background: var(--surface2);
       border: 2px solid var(--border);
       border-radius: 999px;
@@ -36,23 +61,68 @@
       width: 0%;
       background: linear-gradient(90deg, var(--blue), var(--teal), var(--purple));
       border-radius: 999px;
-      transition: width 0.4s ease;
+      transition: width 0.35s ease;
     }
     .bar-label {
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       color: var(--muted);
       text-align: center;
     }
-    .steps-count {
-      font-size: 2.5rem;
-      font-weight: 800;
+
+    /* ── Overall progress dots ── */
+    .progress-row {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    .progress-dot {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      font-size: 0.7rem;
+      color: var(--muted);
+    }
+    .dot-circle {
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      border: 2px solid var(--border);
+      background: var(--surface2);
+      transition: background 0.3s, border-color 0.3s;
+    }
+    .dot-circle.done  { background: var(--teal);   border-color: var(--teal); }
+    .dot-circle.active{ background: var(--purple);  border-color: var(--purple);
+                        box-shadow: 0 0 8px var(--purple); }
+
+    /* ── Done state ── */
+    .done-badge {
+      font-size: 1.1rem;
+      font-weight: 700;
       color: var(--teal);
       text-align: center;
-      font-variant-numeric: tabular-nums;
+      padding: 8px 0;
     }
-    #btn-next      { display: none; }
-    #btn-fallback  { display: none; }
-    #permission-hint { font-size: 0.8rem; color: var(--muted); text-align: center; display: none; }
+
+    /* ── Reactor icon ── */
+    .reactor-icon {
+      font-size: 4rem;
+      transition: filter 0.5s;
+      filter: grayscale(1) brightness(0.5);
+      line-height: 1;
+      text-align: center;
+    }
+    .reactor-icon.charged {
+      filter: none;
+      animation: glow-pulse 1.5s infinite;
+      text-shadow: 0 0 30px var(--teal);
+    }
+
+    /* ── Utility ── */
+    .flex-col { display: flex; flex-direction: column; gap: 10px; align-items: center; width: 100%; }
+    .hidden { display: none !important; }
+    #permission-hint { font-size: 0.8rem; color: var(--muted); text-align: center; }
   </style>
 </head>
 <body>
@@ -65,93 +135,234 @@
   <div class="page">
     <div class="story-card">
       <div class="from">📡 Wiadomość od Hello Kitty</div>
-      Stitch leciał na Twoje urodziny, ale jego statek kosmiczny <strong>rozbił się w ogrodzie</strong>!
-      Reaktor jest <strong>ZUPEŁNIE PUSTY</strong>. Musisz naładować energię zanim uruchomisz systemy pokładowe.
-      <br><br>
-      <strong>🏃 BIEGNIJ żeby naładować reaktor!</strong>
+      Stitch leciał na Twoje urodziny, ale jego statek kosmiczny
+      <strong>rozbił się w ogrodzie</strong>!
+      Reaktor jest <strong>ZUPEŁNIE PUSTY</strong>. Każde dziecko musi pobiec swoją trasę
+      żeby naładować energię. Ruszajcie!
     </div>
 
+    <!-- Overall progress -->
     <div class="card">
-      <h2>⚡ Poziom energii reaktora</h2>
-      <div class="reactor-wrap">
-        <div class="reactor-icon" id="reactor-icon">🔋</div>
-        <div class="steps-count">
-          <span id="steps-display">0</span> / 200 kroków
-        </div>
+      <h2 style="text-align:center">⚡ Reaktor — postęp drużyny</h2>
+      <div class="progress-row" id="progress-row">
+        <!-- filled by JS -->
+      </div>
+      <div style="margin-top:6px">
         <div class="bar-track">
+          <div class="bar-fill" id="total-bar-fill"></div>
+        </div>
+        <div class="bar-label" id="total-bar-label">0 / 300 kroków drużyny</div>
+      </div>
+      <div class="reactor-icon" id="reactor-icon">🔋</div>
+    </div>
+
+    <!-- Current participant -->
+    <div class="card">
+      <div class="participant-card">
+        <div class="participant-avatar" id="p-avatar"></div>
+        <p class="participant-name" id="p-name"></p>
+        <p class="participant-target" id="p-target"></p>
+      </div>
+
+      <div class="flex-col" id="running-ui">
+        <div class="steps-count">
+          <span id="steps-display">0</span>
+          <span class="of" id="steps-of">/ 0</span>
+        </div>
+        <div class="bar-track" style="width:100%">
           <div class="bar-fill" id="bar-fill"></div>
         </div>
-        <div class="bar-label" id="bar-label">Biegnij żeby naładować!</div>
+        <div class="bar-label" id="bar-label">Biegnij!</div>
       </div>
+
+      <div class="done-badge hidden" id="done-badge">✅ Gotowe! Przekaż telefon następnej osobie.</div>
+
+      <p class="hidden" id="permission-hint">Naciśnij przycisk poniżej aby zezwolić na dostęp do czujnika ruchu.</p>
+      <button class="btn btn-secondary hidden" id="btn-permission" onclick="requestPermission()">
+        🔓 Zezwól na dostęp do ruchu
+      </button>
+      <button class="btn btn-secondary hidden" id="btn-fallback"
+        onclick="skipSensor()">⏭️ Pomiń (awaria czujnika)
+      </button>
+
+      <button class="btn btn-primary hidden" id="btn-switch" onclick="nextParticipant()">
+        👉 Zmień uczestnika →
+      </button>
     </div>
 
-    <p id="permission-hint">Naciśnij przycisk poniżej aby zezwolić na dostęp do czujnika ruchu.</p>
-    <button class="btn btn-secondary" id="btn-permission" onclick="requestPermission()">
-      🔓 Zezwól na dostęp do ruchu
-    </button>
-
-    <a href="zodiak.html" class="btn btn-primary" id="btn-next">
+    <a href="zodiak.html" class="btn btn-primary hidden" id="btn-next">
       ⚡ Reaktor naładowany! Odpal systemy →
     </a>
-    <button class="btn btn-secondary" id="btn-fallback"
-      onclick="document.getElementById('btn-next').style.display='block'; this.style.display='none';">
-      ⏭️ Pomiń (awaria czujnika)
-    </button>
   </div>
 
   <script>
-    const TARGET = 200;
-    let steps = 0;
-    let lastMag = 0;
+    /* ── Participants ── */
+    const PARTICIPANTS = [
+      { name: 'Ania',   avatar: '👧', target: 75  },
+      { name: 'Szymon', avatar: '👦', target: 75  },
+      { name: 'Amelia', avatar: '👧', target: 125 },
+      { name: 'Hela',   avatar: '👧', target: 25  },
+    ];
+    const TOTAL_TARGET = PARTICIPANTS.reduce((s, p) => s + p.target, 0); // 300
+
+    /* ── State ── */
+    let currentIdx   = 0;
+    let currentSteps = 0;
+    let phaseDone    = false;
+    let totalSteps   = 0;
+    let lastMag      = 0;
     let fallbackTimer = null;
+    let listening    = false;
 
-    const stepsDisplay = document.getElementById('steps-display');
-    const barFill      = document.getElementById('bar-fill');
-    const barLabel     = document.getElementById('bar-label');
-    const reactorIcon  = document.getElementById('reactor-icon');
-    const btnNext      = document.getElementById('btn-next');
-    const btnFallback  = document.getElementById('btn-fallback');
-    const btnPerm      = document.getElementById('btn-permission');
-    const permHint     = document.getElementById('permission-hint');
+    /* ── DOM refs ── */
+    const $avatar      = document.getElementById('p-avatar');
+    const $name        = document.getElementById('p-name');
+    const $target      = document.getElementById('p-target');
+    const $stepsDisp   = document.getElementById('steps-display');
+    const $stepsOf     = document.getElementById('steps-of');
+    const $barFill     = document.getElementById('bar-fill');
+    const $barLabel    = document.getElementById('bar-label');
+    const $totalFill   = document.getElementById('total-bar-fill');
+    const $totalLabel  = document.getElementById('total-bar-label');
+    const $reactorIcon = document.getElementById('reactor-icon');
+    const $runningUI   = document.getElementById('running-ui');
+    const $doneBadge   = document.getElementById('done-badge');
+    const $btnSwitch   = document.getElementById('btn-switch');
+    const $btnNext     = document.getElementById('btn-next');
+    const $btnPerm     = document.getElementById('btn-permission');
+    const $btnFallback = document.getElementById('btn-fallback');
+    const $permHint    = document.getElementById('permission-hint');
+    const $progressRow = document.getElementById('progress-row');
 
+    /* ── Build progress dots ── */
+    function buildDots() {
+      $progressRow.innerHTML = '';
+      PARTICIPANTS.forEach((p, i) => {
+        const div = document.createElement('div');
+        div.className = 'progress-dot';
+        div.innerHTML =
+          `<div class="dot-circle ${i < currentIdx ? 'done' : i === currentIdx ? 'active' : ''}" id="dot-${i}"></div>` +
+          `<span>${p.avatar} ${p.name}</span>`;
+        $progressRow.appendChild(div);
+      });
+    }
+
+    function updateDots() {
+      PARTICIPANTS.forEach((_, i) => {
+        const el = document.getElementById('dot-' + i);
+        if (!el) return;
+        el.className = 'dot-circle' +
+          (i < currentIdx ? ' done' : i === currentIdx ? ' active' : '');
+      });
+    }
+
+    /* ── Load current participant ── */
+    function loadParticipant() {
+      const p = PARTICIPANTS[currentIdx];
+      currentSteps = 0;
+      phaseDone    = false;
+
+      $avatar.textContent = p.avatar;
+      $name.textContent   = p.name;
+      $target.textContent = `do przebiegnięcia: ${p.target} kroków`;
+
+      $stepsDisp.textContent = '0';
+      $stepsOf.textContent   = `/ ${p.target}`;
+      $barFill.style.width   = '0%';
+      $barLabel.textContent  = 'Biegnij!';
+
+      $runningUI.classList.remove('hidden');
+      $doneBadge.classList.add('hidden');
+      $btnSwitch.classList.add('hidden');
+      $btnNext.classList.add('hidden');
+
+      updateDots();
+      resetFallbackTimer();
+    }
+
+    /* ── Update individual bar ── */
     function updateBar() {
-      const pct = Math.min(steps / TARGET * 100, 100);
-      barFill.style.width = pct + '%';
-      stepsDisplay.textContent = Math.min(steps, TARGET);
+      const p   = PARTICIPANTS[currentIdx];
+      const pct = Math.min(currentSteps / p.target * 100, 100);
+      $barFill.style.width   = pct + '%';
+      $stepsDisp.textContent = Math.min(currentSteps, p.target);
 
-      if (steps >= TARGET) {
-        barLabel.textContent = '✅ Reaktor w pełni naładowany!';
-        reactorIcon.textContent = '⚡';
-        reactorIcon.classList.add('charged');
-        btnNext.style.display = 'block';
+      // Total bar
+      const totalPct = Math.min(totalSteps / TOTAL_TARGET * 100, 100);
+      $totalFill.style.width = totalPct + '%';
+      $totalLabel.textContent =
+        Math.round(totalPct) + '% — ' + totalSteps + ' / ' + TOTAL_TARGET + ' kroków drużyny';
+
+      if (currentSteps >= p.target && !phaseDone) {
+        phaseDone = true;
+        $barLabel.textContent = '✅ Brawo ' + p.name + '!';
         if (fallbackTimer) clearTimeout(fallbackTimer);
         if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
-      } else {
-        const pctInt = Math.round(pct);
-        barLabel.textContent = pctInt + '% — jeszcze ' + (TARGET - steps) + ' kroków!';
+
+        $runningUI.classList.add('hidden');
+        $doneBadge.classList.remove('hidden');
+
+        const isLast = currentIdx === PARTICIPANTS.length - 1;
+        if (isLast) {
+          // All done
+          $reactorIcon.textContent = '⚡';
+          $reactorIcon.classList.add('charged');
+          $btnNext.classList.remove('hidden');
+          $totalLabel.textContent = '✅ Reaktor w pełni naładowany!';
+          if (navigator.vibrate) navigator.vibrate([100,50,100,50,300]);
+        } else {
+          $btnSwitch.classList.remove('hidden');
+        }
+      } else if (!phaseDone) {
+        $barLabel.textContent =
+          Math.round(pct) + '% — jeszcze ' + (p.target - currentSteps) + ' kroków!';
       }
     }
 
+    /* ── Next participant ── */
+    function nextParticipant() {
+      currentIdx++;
+      loadParticipant();
+    }
+
+    /* ── Motion ── */
     function handleMotion(e) {
+      if (phaseDone) return;
       const a = e.accelerationIncludingGravity;
       if (!a || a.x == null) return;
       const mag = Math.sqrt(a.x * a.x + a.y * a.y + a.z * a.z);
-      // Detect step: magnitude crosses threshold upward
-      if (mag > 14 && lastMag <= 14 && steps < TARGET) {
-        steps++;
+      if (mag > 14 && lastMag <= 14) {
+        currentSteps++;
+        totalSteps++;
         updateBar();
       }
       lastMag = mag;
     }
 
+    /* ── Permission / sensor start ── */
     function startListening() {
+      if (listening) return;
+      listening = true;
       window.addEventListener('devicemotion', handleMotion);
-      btnPerm.style.display = 'none';
-      permHint.style.display = 'none';
-      // Show fallback after 30s if sensor not working
+      $btnPerm.classList.add('hidden');
+      $permHint.classList.add('hidden');
+    }
+
+    function resetFallbackTimer() {
+      if (fallbackTimer) clearTimeout(fallbackTimer);
       fallbackTimer = setTimeout(() => {
-        if (steps < 5) btnFallback.style.display = 'block';
+        if (currentSteps < 5 && !phaseDone) $btnFallback.classList.remove('hidden');
       }, 30000);
+    }
+
+    function skipSensor() {
+      $btnFallback.classList.add('hidden');
+      // Jump to done for this participant
+      const p = PARTICIPANTS[currentIdx];
+      const missing = p.target - currentSteps;
+      currentSteps = p.target;
+      totalSteps  += missing;
+      updateBar();
     }
 
     function requestPermission() {
@@ -161,20 +372,22 @@
           .then(state => {
             if (state === 'granted') startListening();
           })
-          .catch(() => { btnFallback.style.display = 'block'; });
+          .catch(() => { $btnFallback.classList.remove('hidden'); });
       } else {
         startListening();
       }
     }
 
-    // Auto-start on Android Chrome (no permission prompt needed)
+    /* ── Init ── */
+    buildDots();
+    loadParticipant();
+
     if (typeof DeviceMotionEvent !== 'undefined' &&
         typeof DeviceMotionEvent.requestPermission !== 'function') {
       startListening();
-      btnPerm.style.display = 'none';
     } else {
-      // iOS or browser requiring explicit permission
-      permHint.style.display = 'block';
+      $permHint.classList.remove('hidden');
+      $btnPerm.classList.remove('hidden');
     }
   </script>
 </body>
