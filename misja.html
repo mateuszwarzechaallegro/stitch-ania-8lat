@@ -8,24 +8,30 @@
   <style>
     .hidden { display: none !important; }
 
-    /* Map area */
-    .map-area {
-      border: 3px dashed var(--purple);
-      border-radius: 14px;
-      min-height: 180px;
-      background: var(--surface2);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      padding: 20px;
-      text-align: center;
-    }
-    .map-area img {
+    /* Map image */
+    .map-img {
       width: 100%;
       border-radius: 10px;
       display: block;
+      cursor: zoom-in;
+    }
+
+    /* Fullscreen lightbox */
+    #lightbox {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.92);
+      z-index: 999;
+      align-items: center;
+      justify-content: center;
+    }
+    #lightbox.open { display: flex; }
+    #lightbox img {
+      max-width: 100%;
+      max-height: 100%;
+      border-radius: 8px;
+      cursor: zoom-out;
     }
 
     /* Clue list */
@@ -86,17 +92,10 @@
       <!-- Map -->
       <div class="card">
         <h2 style="text-align:center">📍 Mapa misji</h2>
-        <!--
-          ORGANIZATOR: podmień div.map-area poniżej na:
-          <img src="twoja-mapka.jpg" style="width:100%;border-radius:10px" />
-        -->
-        <div class="map-area">
-          <div style="font-size:3rem">🗺️</div>
-          <strong style="color:var(--purple)">[ MAPKA MISJI ]</strong>
-          <div style="font-size:0.78rem;color:var(--muted)">
-            Podmień na zrzut ekranu z Google Maps<br>
-            (lub wydrukuj mapkę z pliku <code>print.html</code>)
-          </div>
+        <img src="images/rowerowe_drzewo.png" alt="Mapa misji"
+             class="map-img" onclick="openLightbox()" />
+        <div style="text-align:center;font-size:0.75rem;color:var(--muted);margin-top:6px">
+          Kliknij mapkę żeby powiększyć
         </div>
       </div>
 
@@ -126,6 +125,11 @@
       </div>
 
     </div>
+</div><!-- /page -->
+
+  <!-- Lightbox -->
+  <div id="lightbox" onclick="closeLightbox()">
+    <img src="images/rowerowe_drzewo.png" alt="Mapa misji powiększona" />
   </div>
 
   <script>
@@ -134,6 +138,8 @@
       document.getElementById('btn-start').classList.add('hidden');
       document.getElementById('game-section').classList.remove('hidden');
     }
+    function openLightbox()  { document.getElementById('lightbox').classList.add('open'); }
+    function closeLightbox() { document.getElementById('lightbox').classList.remove('open'); }
   </script>
 </body>
 </html>
