@@ -44,14 +44,19 @@
     utter.onstart = function () {
       speaking = true;
       updateBtn();
-      // Android Chrome workaround: keep-alive every 10 s to prevent early cutoff
+      // Android Chrome bug: speechSynthesis pauses itself spontaneously
+      // (triggered by touch events, audio focus changes, etc.).
+      // Poll every 250 ms and immediately resume if paused.
       keepAliveTimer = setInterval(function () {
-        if (!window.speechSynthesis.speaking) {
-          stopKeepAlive(); speaking = false; updateBtn(); return;
+        if (window.speechSynthesis.paused) {
+          window.speechSynthesis.resume();
+        } else if (!window.speechSynthesis.speaking && !window.speechSynthesis.pending) {
+          // Speech finished naturally
+          stopKeepAlive();
+          speaking = false;
+          updateBtn();
         }
-        window.speechSynthesis.pause();
-        window.speechSynthesis.resume();
-      }, 10000);
+      }, 250);
     };
 
     utter.onend = function () {
