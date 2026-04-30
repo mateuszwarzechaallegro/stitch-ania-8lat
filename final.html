@@ -11,14 +11,14 @@
 
     .slots-row {
       display: flex;
-      gap: 5px;
+      gap: 4px;
       flex-wrap: nowrap;
-      overflow-x: auto;
-      padding-bottom: 4px;
+      overflow: hidden;   /* no scrollbar ever */
     }
     .day-slot {
-      min-width: 40px;
-      height: 48px;
+      flex: 1 1 0;        /* equal share of available width */
+      min-width: 0;       /* allow shrinking below content */
+      height: 52px;
       border: 2px dashed var(--border);
       border-radius: var(--radius-sm);
       display: flex;
@@ -26,12 +26,22 @@
       justify-content: center;
       flex-direction: column;
       background: var(--surface2);
-      flex-shrink: 0;
       transition: border-color 0.2s;
+      overflow: hidden;
     }
     .day-slot.drag-over { border-color: var(--purple); background: rgba(196,92,217,0.1); }
     .day-slot span { font-size: 0.55rem; color: var(--muted); }
     .day-slot.occupied { border-style: solid; border-color: var(--border); }
+
+    /* Tile shrinks to fill the slot when placed */
+    .day-slot .day-tile {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 8px 2px;
+      font-size: 0.72rem;
+      text-align: center;
+      border-radius: 4px;
+    }
 
     .days-pool {
       display: flex;
