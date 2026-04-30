@@ -1,23 +1,54 @@
 /* speech.js — TTS helper for Misja Ania
-   Simulates a high-pitched, energetic voice (Stitch-like approximation)
-   using the Web Speech API with the system Polish TTS voice.
+   Splits text into sentences and chains them via onend to work around
+   the Android Chrome bug where long utterances are silently killed.
    Usage: initTTS("Tekst do przeczytania…")  — call once per page */
 
 (function () {
-  var PITCH = 1.45;   // higher = more playful / Stitch-like
-  var RATE  = 1.05;   // slightly faster for energy
+  var PITCH = 1.45;
+  var RATE  = 1.05;
   var LANG  = 'pl-PL';
 
-  var speaking       = false;
-  var keepAliveTimer = null;
+  var speaking = false;
+  var queue    = [];   // sentence chunks still to play
+  var stopFlag = false;
 
   function getPolishVoice() {
     var voices = window.speechSynthesis.getVoices();
     return voices.find(function (v) { return v.lang.startsWith('pl'); }) || null;
   }
 
-  function stopKeepAlive() {
-    if (keepAliveTimer) { clearInterval(keepAliveTimer); keepAliveTimer = null; }
+  /* Split on sentence-ending punctuation, keeping delimiters */
+  function toChunks(text) {
+    var raw = text.match(/[^.!?—]+[.!?—]*/g) || [text];
+    // Trim and drop empty strings
+    return raw.map(function (s) { return s.trim(); }).filter(function (s) { return s.length > 0; });
+  }
+
+  function playNext() {
+    if (stopFlag || queue.length === 0) {
+      speaking  = false;
+      stopFlag  = false;
+      queue     = [];
+      updateBtn();
+      return;
+    }
+
+    var chunk = queue.shift();
+    var utter = new SpeechSynthesisUtterance(chunk);
+    utter.lang  = LANG;
+    utter.pitch = PITCH;
+    utter.rate  = RATE;
+    var voice = getPolishVoice();
+    if (voice) utter.voice = voice;
+
+    utter.onend   = function () { playNext(); };
+    utter.onerror = function (e) {
+      // 'interrupted' fires when we cancel intentionally — ignore it
+      if (e.error === 'interrupted') return;
+      playNext(); // skip broken chunk, continue with rest
+    };
+
+    window.speechSynthesis.speak(utter);
   }
 
   function speak(text) {
@@ -25,49 +56,20 @@
 
     // Second tap = stop
     if (speaking) {
+      stopFlag = true;
+      queue    = [];
       window.speechSynthesis.cancel();
-      stopKeepAlive();
       speaking = false;
       updateBtn();
       return;
     }
 
-    window.speechSynthesis.cancel(); // clear any leftover
-
-    var utter = new SpeechSynthesisUtterance(text);
-    utter.lang  = LANG;
-    utter.pitch = PITCH;
-    utter.rate  = RATE;
-    var voice = getPolishVoice();
-    if (voice) utter.voice = voice;
-
-    utter.onstart = function () {
-      speaking = true;
-      updateBtn();
-      // Android Chrome bug: speechSynthesis pauses itself spontaneously
-      // (triggered by touch events, audio focus changes, etc.).
-      // Poll every 250 ms and immediately resume if paused.
-      keepAliveTimer = setInterval(function () {
-        if (window.speechSynthesis.paused) {
-          window.speechSynthesis.resume();
-        } else if (!window.speechSynthesis.speaking && !window.speechSynthesis.pending) {
-          // Speech finished naturally
-          stopKeepAlive();
-          speaking = false;
-          updateBtn();
-        }
-      }, 250);
-    };
-
-    utter.onend = function () {
-      stopKeepAlive(); speaking = false; updateBtn();
-    };
-
-    utter.onerror = function () {
-      stopKeepAlive(); speaking = false; updateBtn();
-    };
-
-    window.speechSynthesis.speak(utter);
+    window.speechSynthesis.cancel();
+    stopFlag = false;
+    queue    = toChunks(text);
+    speaking = true;
+    updateBtn();
+    playNext();
   }
 
   function updateBtn() {
@@ -77,9 +79,8 @@
     btn.style.background = speaking ? '#a0207a' : '#6b00b6';
   }
 
-  /* Public API — call once per page with the text to read */
+  /* Public API */
   window.initTTS = function (text) {
-    // Pre-load voice list (async in some browsers)
     if ('speechSynthesis' in window) {
       speechSynthesis.getVoices();
       speechSynthesis.onvoiceschanged = function () {};
