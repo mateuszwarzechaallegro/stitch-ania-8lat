@@ -56,7 +56,7 @@
       text-align: center;
       line-height: 1.6;
     }
-    #btn-next-zodiak { display: none; }
+    .hidden { display: none !important; }
   </style>
 </head>
 <body>
@@ -67,7 +67,7 @@
   </div>
 
   <div class="page">
-    <div class="story-card">
+    <div class="story-card" id="story-card">
       <div class="from">🖥️ Komputer pokładowy</div>
       System nawigacyjny wymaga kodu dostępu. Hasło to <strong>Twój kosmiczny znak</strong>.
       Komputer zaszyfrował go w labiryncie.
@@ -75,33 +75,58 @@
       <strong>✏️ Przeprowadź rysik przez labirynt — ścieżka ujawni odpowiedź!</strong>
     </div>
 
-    <div class="card">
-      <div class="maze-wrap">
-        <div class="maze-hint">▶ Wejście: lewy-górny róg &nbsp;|&nbsp; ★ Wyjście: prawy-dolny róg</div>
-        <canvas id="maze-canvas"></canvas>
-        <div id="maze-status">Dotknij wejścia (lewy-górny róg) i prowadź do wyjścia</div>
-      </div>
+    <button class="btn btn-primary" id="btn-start" onclick="startGame()" style="font-size:1.3rem;padding:18px 0;">
+      🔭 START — wejdź do labiryntu!
+    </button>
 
-      <div id="zodiac-reveal">
-        <div class="big-zodiac-sign">♉</div>
-        <p>Komputer przeliczył Twoją trasę…<br>
-          Odkryłaś swój kosmiczny znak —<br>
-          <strong>BYK ♉</strong>!<br>
-          Ustaw ten symbol na pudełku!</p>
+    <!-- Maze — hidden until START -->
+    <div id="game-section" class="hidden">
+      <div class="card">
+        <div class="maze-wrap">
+          <div class="maze-hint">▶ Wejście: lewy-górny róg &nbsp;|&nbsp; ★ Wyjście: prawy-dolny róg</div>
+          <canvas id="maze-canvas"></canvas>
+          <div id="maze-status">Dotknij wejścia (lewy-górny róg) i prowadź do wyjścia</div>
+        </div>
       </div>
+      <button class="btn btn-secondary" onclick="skipMaze()" style="font-size:0.85rem;padding:10px 0;">
+        ⏭️ Pomiń labirynt
+      </button>
     </div>
 
-    <!-- Always-visible skip button -->
-    <a href="misja.html" class="btn btn-secondary" id="btn-always">
-      ➡️ Idź dalej (znam już znak)
-    </a>
-    <!-- Appears after maze solved -->
-    <a href="misja.html" class="btn btn-primary" id="btn-next-zodiak">
-      🚀 System odblokowany! Następna misja →
-    </a>
+    <!-- Completion — hidden until solved -->
+    <div id="completion-section" class="hidden">
+      <div class="card">
+        <div id="zodiac-reveal" style="display:flex;flex-direction:column;align-items:center;gap:10px;padding-top:12px;animation:pop-in 0.5s ease both;">
+          <div class="big-zodiac-sign">♉</div>
+          <p>Komputer przeliczył Twoją trasę…<br>
+            Odkryłaś swój kosmiczny znak —<br>
+            <strong>BYK ♉</strong>!<br>
+            Ustaw ten symbol na pudełku!</p>
+        </div>
+      </div>
+      <a href="misja.html" class="btn btn-primary" id="btn-next-zodiak" style="font-size:1.3rem;padding:18px 0;">
+        🚀 System odblokowany! Następna misja →
+      </a>
+    </div>
   </div>
 
   <script>
+    // ── START / SKIP ─────────────────────────────────────────
+    function startGame() {
+      document.getElementById('story-card').classList.add('hidden');
+      document.getElementById('btn-start').classList.add('hidden');
+      document.getElementById('game-section').classList.remove('hidden');
+    }
+
+    function skipMaze() {
+      showCompletion();
+    }
+
+    function showCompletion() {
+      document.getElementById('game-section').classList.add('hidden');
+      document.getElementById('completion-section').classList.remove('hidden');
+    }
+
     // ── CONFIG ───────────────────────────────────────────────
     const COLS = 9, ROWS = 11, CELL = 34;
     const W = COLS * CELL, H = ROWS * CELL;
@@ -317,14 +342,10 @@
       ctx.restore();
 
       document.getElementById('maze-status').textContent = '🎉 Dotarłaś do wyjścia!';
+      if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 300]);
+      launchConfetti();
 
-      setTimeout(() => {
-        const reveal = document.getElementById('zodiac-reveal');
-        reveal.style.display = 'flex';
-        document.getElementById('btn-next-zodiak').style.display = 'block';
-        if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 300]);
-        launchConfetti();
-      }, 500);
+      setTimeout(() => showCompletion(), 900);
     }
 
     canvas.addEventListener('pointerdown',   onStart, {passive: false});
