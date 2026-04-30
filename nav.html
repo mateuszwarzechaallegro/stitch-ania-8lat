@@ -165,6 +165,19 @@
         <h2 style="text-align:center">⏱️ Czas do przegrzania silnika</h2>
         <div class="countdown-display" id="countdown">--:--</div>
         <div class="countdown-label" id="countdown-label">Znajdź silnik zanim skończy się czas!</div>
+        <div id="expired-box" class="hidden" style="text-align:center;margin-top:12px">
+          <div style="font-size:2rem;margin-bottom:6px">💥</div>
+          <div style="font-weight:700;color:var(--pink);margin-bottom:12px">
+            Czas minął! Nie poddawaj się!<br>
+            <span style="font-size:0.85rem;font-weight:400;color:var(--muted)">
+              Wróć po skrzynkę albo zresetuj licznik.
+            </span>
+          </div>
+          <button class="btn btn-secondary" onclick="resetTimer()"
+            style="padding:10px 24px;font-size:0.95rem">
+            🔄 Resetuj licznik
+          </button>
+        </div>
       </div>
 
       <!-- Code input card -->
@@ -207,11 +220,11 @@
 
   <script>
     // ═══════════════════════════════════════════════════════════
-    //  KONFIGURACJA — ustaw przed imprezą!
+    //  KONFIGURACJA — ustaw przed imprezą!, 
     // ═══════════════════════════════════════════════════════════
-    const TARGET_LAT        = 52.123456;  // ← ZMIEŃ: szerokość geograficzna skrzynki
-    const TARGET_LNG        = 21.123456;  // ← ZMIEŃ: długość geograficzna skrzynki
-    const COUNTDOWN_MINUTES = 15;         // ← czas odliczania (minuty)
+    const TARGET_LAT        = 52.56720040605484;  // ← ZMIEŃ: szerokość geograficzna skrzynki
+    const TARGET_LNG        = 17.041897261715796;  // ← ZMIEŃ: długość geograficzna skrzynki
+    const COUNTDOWN_MINUTES = 10;         // ← czas odliczania (minuty)
     const SECRET_CODE       = 'SILNIK';   // ← hasło w skrzynce (wielkość liter nieważna)
     // ═══════════════════════════════════════════════════════════
 
@@ -220,6 +233,7 @@
 
     let watchId     = null;
     let timerHandle = null;
+    let timerStart  = null;
     let prevDist    = null;
 
     // DOM
@@ -234,6 +248,7 @@
     const $gpsStatus  = document.getElementById('gps-status');
     const $countdown  = document.getElementById('countdown');
     const $cdLabel    = document.getElementById('countdown-label');
+    const $expiredBox = document.getElementById('expired-box');
     const $codeInput  = document.getElementById('code-input');
     const $codeError  = document.getElementById('code-error');
 
@@ -242,10 +257,7 @@
       $story.classList.add('hidden');
       $btnStart.classList.add('hidden');
       $game.classList.remove('hidden');
-
-      if (!localStorage.getItem(STORAGE_KEY)) {
-        localStorage.setItem(STORAGE_KEY, Date.now().toString());
-      }
+      timerStart = Date.now();
       tickCountdown();
       timerHandle = setInterval(tickCountdown, 1000);
       startGPS();
@@ -253,8 +265,7 @@
 
     // ── COUNTDOWN ───────────────────────────────────────────
     function tickCountdown() {
-      const start   = parseInt(localStorage.getItem(STORAGE_KEY));
-      const elapsed = Date.now() - start;
+      const elapsed = Date.now() - timerStart;
       const total   = COUNTDOWN_MINUTES * 60 * 1000;
       const remain  = Math.max(0, total - elapsed);
       const mins    = Math.floor(remain / 60000);
@@ -263,13 +274,26 @@
 
       if (remain <= 0) {
         clearInterval(timerHandle);
+        timerHandle = null;
         $countdown.textContent = '00:00';
         $countdown.classList.add('urgent');
-        $cdLabel.textContent = '💥 Czas minął! Ale nie poddawaj się — znajdź skrzynkę!';
+        $cdLabel.classList.add('hidden');
+        $expiredBox.classList.remove('hidden');
       } else if (remain <= 60000) {
         $countdown.classList.add('urgent');
         $cdLabel.textContent = '🔥 SILNIK PRAWIE EKSPLODUJE! BIEGNIJ!';
       }
+    }
+
+    function resetTimer() {
+      timerStart = Date.now();
+      $countdown.classList.remove('urgent');
+      $cdLabel.textContent = 'Znajdź silnik zanim skończy się czas!';
+      $cdLabel.classList.remove('hidden');
+      $expiredBox.classList.add('hidden');
+      if (timerHandle) clearInterval(timerHandle);
+      tickCountdown();
+      timerHandle = setInterval(tickCountdown, 1000);
     }
 
     function pad(n) { return n.toString().padStart(2, '0'); }
@@ -380,7 +404,6 @@
       if (val === SECRET_CODE.toUpperCase()) {
         clearInterval(timerHandle);
         if (watchId !== null) navigator.geolocation.clearWatch(watchId);
-        localStorage.removeItem(STORAGE_KEY);
         $game.classList.add('hidden');
         $completion.classList.remove('hidden');
         launchConfetti();
