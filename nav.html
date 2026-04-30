@@ -35,14 +35,66 @@
     .dist-close  { color: var(--success); animation: glow-pulse 0.9s infinite; }
     .dist-here   { color: var(--teal);   animation: glow-pulse 0.5s infinite; }
 
-    /* ── Compass ── */
-    .compass-wrap { text-align: center; }
-    .compass-arrow {
-      font-size: 3.2rem;
-      line-height: 1;
-      display: block;
+    /* ── Compass ring ── */
+    .compass-ring {
+      position: relative;
+      width: 158px;
+      height: 158px;
+      border-radius: 50%;
+      border: 3px solid var(--purple);
+      background: radial-gradient(circle at center, #1a0b30 0%, #060612 100%);
+      flex-shrink: 0;
     }
-    .compass-label { font-size: 0.72rem; color: var(--muted); margin-top: 4px; }
+    .c-cardinal {
+      position: absolute;
+      font-size: 0.72rem;
+      font-weight: 800;
+      color: var(--muted);
+      line-height: 1;
+      user-select: none;
+      pointer-events: none;
+    }
+    .c-N { top: 7px;    left: 50%;  transform: translateX(-50%); color: var(--pink); }
+    .c-S { bottom: 7px; left: 50%;  transform: translateX(-50%); }
+    .c-E { right: 9px;  top: 50%;   transform: translateY(-50%); }
+    .c-W { left: 9px;   top: 50%;   transform: translateY(-50%); }
+    .compass-needle-wrap {
+      position: absolute;
+      top: 50%; left: 50%;
+      width: 0; height: 0;
+      transform: translate(-50%, -50%) rotate(0deg);
+      transition: transform 0.25s ease-out;
+      pointer-events: none;
+    }
+    .needle-tip {
+      position: absolute;
+      width: 0; height: 0;
+      border-left: 8px solid transparent;
+      border-right: 8px solid transparent;
+      border-bottom: 52px solid var(--teal);
+      top: -52px; left: -8px;
+      filter: drop-shadow(0 0 6px var(--teal));
+    }
+    .needle-tail {
+      position: absolute;
+      width: 0; height: 0;
+      border-left: 8px solid transparent;
+      border-right: 8px solid transparent;
+      border-top: 34px solid rgba(255, 107, 168, 0.45);
+      top: 0; left: -8px;
+    }
+    .compass-dot {
+      position: absolute;
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      background: var(--fg);
+      border: 2px solid #060612;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 2;
+      pointer-events: none;
+    }
+    .compass-label { font-size: 0.72rem; color: var(--muted); margin-top: 5px; text-align: center; }
 
     /* ── GPS status line ── */
     .gps-status {
@@ -152,8 +204,18 @@
             <div class="dist-number dist-far" id="dist-num">---</div>
             <div class="dist-unit" id="dist-unit">metrów</div>
           </div>
-          <div class="compass-wrap">
-            <span class="compass-arrow" id="compass-arrow">❔</span>
+          <div style="display:flex;flex-direction:column;align-items:center;">
+            <div class="compass-ring">
+              <div class="c-cardinal c-N">N</div>
+              <div class="c-cardinal c-S">S</div>
+              <div class="c-cardinal c-E">E</div>
+              <div class="c-cardinal c-W">W</div>
+              <div class="compass-needle-wrap" id="compass-needle-wrap">
+                <div class="needle-tip"></div>
+                <div class="needle-tail"></div>
+              </div>
+              <div class="compass-dot"></div>
+            </div>
             <div class="compass-label" id="compass-label">szukam GPS…</div>
           </div>
         </div>
@@ -231,19 +293,21 @@
     const STORAGE_KEY = 'nav_timer_start';
     const IS_PLACEHOLDER = (TARGET_LAT === 52.123456 && TARGET_LNG === 21.123456);
 
-    let watchId     = null;
-    let timerHandle = null;
-    let timerStart  = null;
-    let prevDist    = null;
+    let watchId       = null;
+    let timerHandle   = null;
+    let timerStart    = null;
+    let prevDist      = null;
+    let gpsBearing    = null;   // bearing to target (degrees, 0=N clockwise)
+    let deviceHeading = null;   // phone compass heading (degrees, 0=N clockwise)
+    let needleAngle   = 0;      // accumulated rotation for shortest-path anim
 
-    // DOM
     const $story      = document.getElementById('story-card');
     const $btnStart   = document.getElementById('btn-start');
     const $game       = document.getElementById('game-section');
     const $completion = document.getElementById('completion-section');
     const $distNum    = document.getElementById('dist-num');
     const $distUnit   = document.getElementById('dist-unit');
-    const $compass    = document.getElementById('compass-arrow');
+    const $needleWrap = document.getElementById('compass-needle-wrap');
     const $compLabel  = document.getElementById('compass-label');
     const $gpsStatus  = document.getElementById('gps-status');
     const $countdown  = document.getElementById('countdown');
@@ -261,6 +325,7 @@
       tickCountdown();
       timerHandle = setInterval(tickCountdown, 1000);
       startGPS();
+      startCompass();
     }
 
     // ── COUNTDOWN ───────────────────────────────────────────
@@ -297,6 +362,53 @@
     }
 
     function pad(n) { return n.toString().padStart(2, '0'); }
+
+    // ── COMPASS ──────────────────────────────────────────────
+    function startCompass() {
+      if (typeof DeviceOrientationEvent !== 'undefined' &&
+          typeof DeviceOrientationEvent.requestPermission === 'function') {
+        // iOS 13+ — needs explicit permission
+        DeviceOrientationEvent.requestPermission()
+          .then(s => { if (s === 'granted') listenOrientation(); })
+          .catch(() => {});
+      } else {
+        listenOrientation();
+      }
+    }
+
+    function listenOrientation() {
+      // 'deviceorientationabsolute' gives compass-accurate alpha on Android
+      const evtName = ('ondeviceorientationabsolute' in window)
+        ? 'deviceorientationabsolute'
+        : 'deviceorientation';
+      window.addEventListener(evtName, onOrientation, true);
+    }
+
+    function onOrientation(e) {
+      if (typeof e.webkitCompassHeading === 'number') {
+        deviceHeading = e.webkitCompassHeading;          // iOS (reliable)
+      } else if (e.alpha !== null) {
+        deviceHeading = (360 - e.alpha + 360) % 360;    // Android
+      }
+      updateNeedle();
+    }
+
+    function updateNeedle() {
+      if (gpsBearing === null) return;
+      // If we have device heading: arrow = bearing relative to phone orientation
+      // If not: arrow = absolute bearing (static, north = up)
+      const target = deviceHeading !== null
+        ? (gpsBearing - deviceHeading + 360) % 360
+        : gpsBearing;
+      // Shortest-path rotation to avoid spinning the wrong way
+      let diff = ((target - needleAngle % 360) + 540) % 360 - 180;
+      needleAngle += diff;
+      $needleWrap.style.transform =
+        `translate(-50%, -50%) rotate(${needleAngle}deg)`;
+      $compLabel.textContent = deviceHeading !== null
+        ? 'Idź w kierunku strzałki ↑'
+        : bearingToArrow(gpsBearing).label + ' (wg płn.)';
+    }
 
     // ── GPS ─────────────────────────────────────────────────
     function startGPS() {
@@ -343,9 +455,8 @@
 
       // Compass
       const bearing = getBearing(lat, lng, TARGET_LAT, TARGET_LNG);
-      const { arrow, label } = bearingToArrow(bearing);
-      $compass.textContent = arrow;
-      $compLabel.textContent = label + ' (wg płn.)';
+      gpsBearing = bearing;
+      updateNeedle();
 
       // Warmer / colder
       if (prevDist !== null) {
